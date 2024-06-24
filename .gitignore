@@ -1,0 +1,5 @@
+node_modules
+rdata
+config.json
+*.mkv
+*.7z
