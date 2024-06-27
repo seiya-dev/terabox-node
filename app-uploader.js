@@ -40,7 +40,7 @@ if(yargs.getArgv('help')){
         cur_acc = config.accounts[yargs.getArgv('a')];
     }
     else{
-        cur_acc = await selectAccount();
+        cur_acc = await selectAccount(config);
     }
     
     app = new TeraBoxApp(cur_acc);
