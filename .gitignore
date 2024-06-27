@@ -3,3 +3,4 @@ rdata
 config.json
 *.mkv
 *.7z
+.vscode

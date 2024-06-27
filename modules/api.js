@@ -2,6 +2,8 @@ import * as undici from 'undici';
 
 const TERABOX_UA = 'terabox;1.31.0.1;PC;PC-Windows;10.0.22631;WindowsTeraBox';
 const TERABOX_BASE_URL = 'https://www.terabox.com';
+const TERABOX_API_TIMEOUT = 10000;
+const TERABOX_CHUNK_TIMEOUT = 60000;
 const TERABOX_APP_PARAMS = {
     app_id: 250528,
     web: 1,
@@ -22,7 +24,8 @@ class TeraBoxApp {
                 headers:{
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.cookieString,
-                }
+                },
+                signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
             });
 
             const data = await req.text();
@@ -38,7 +41,7 @@ class TeraBoxApp {
             }
         }
         catch(error){
-            error.message = 'updateAppData: ' + error.message;
+            error = new Error('updateAppData', { cause: error });
             console.error('[ERROR] Failed to update jsToken:', error);
         }
     }
@@ -51,7 +54,7 @@ class TeraBoxApp {
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.cookieString,
                 },
-                signal: AbortSignal.timeout(10000),
+                signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
             });
 
             if (!req.ok) {
@@ -62,8 +65,7 @@ class TeraBoxApp {
             return data;
         }
         catch(error){
-            error.message = 'checkLogin: ' + error.message;
-            throw error;
+            throw new Error('checkLogin', { cause: error });
         }
     }
 
@@ -75,7 +77,7 @@ class TeraBoxApp {
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.cookieString,
                 },
-                signal: AbortSignal.timeout(10000),
+                signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
             });
 
             if (!req.ok) {
@@ -86,8 +88,7 @@ class TeraBoxApp {
             return data;
         }
         catch(error){
-            error.message = 'getAccountData: ' + error.message;
-            throw error;
+            throw new Error('getAccountData', { cause: error });
         }
     }
 
@@ -99,7 +100,7 @@ class TeraBoxApp {
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.cookieString,
                 },
-                signal: AbortSignal.timeout(10000),
+                signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
             });
 
             if (!req.ok) {
@@ -110,8 +111,7 @@ class TeraBoxApp {
             return data;
         }
         catch (error) {
-            error.message = 'getPassport: ' + error.message;
-            throw error;
+            throw new Error('getPassport', { cause: error });
         }
     }
 
@@ -123,7 +123,7 @@ class TeraBoxApp {
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.cookieString,
                 },
-                signal: AbortSignal.timeout(20000),
+                signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
             });
 
             if (!req.ok) {
@@ -136,8 +136,7 @@ class TeraBoxApp {
             return quota;
         }
         catch (error) {
-            error.message = 'getQuota: ' + error.message;
-            throw error;
+            throw new Error('getQuota', { cause: error });
         }
     }
 
@@ -161,7 +160,7 @@ class TeraBoxApp {
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.cookieString,
                 },
-                signal: AbortSignal.timeout(20000),
+                signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
             });
 
             if (!req.ok) {
@@ -173,8 +172,70 @@ class TeraBoxApp {
             return data;
         }
         catch (error) {
-            error.message = 'getRemoteDir: ' + error.message;
-            throw error;
+            throw new Error('getRemoteDir', { cause: error });
+        }
+    }
+    
+    async getRecycleDir(){
+        try{
+            const url = new URL(TERABOX_BASE_URL + '/api/recycle/list');
+            url.search = new URLSearchParams({
+                ...TERABOX_APP_PARAMS,
+                jsToken: this.app_data.jsToken,
+                order: 'name',
+                desc: 0,
+                num: 20000,
+                page: 1,
+            });
+            
+            const req = await fetch(url, {
+                headers: {
+                    'User-Agent': TERABOX_UA,
+                    'Cookie': this.cookieString,
+                },
+                signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
+            });
+            
+            if (!req.ok) {
+                throw new Error(`HTTP error! status: ${req.status}`);
+            }
+            
+            const data = await req.json();
+            
+            return data;
+        }
+        catch (error) {
+            throw new Error('getRecycleDir', { cause: error });
+        }
+    }
+    
+    async clearRecycleDir(){
+        try{
+            const url = new URL(TERABOX_BASE_URL + '/api/recycle/clear');
+            url.search = new URLSearchParams({
+                ...TERABOX_APP_PARAMS,
+                jsToken: this.app_data.jsToken,
+                'async': 1,
+            });
+            
+            const req = await fetch(url, {
+                headers: {
+                    'User-Agent': TERABOX_UA,
+                    'Cookie': this.cookieString,
+                },
+                signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
+            });
+            
+            if (!req.ok) {
+                throw new Error(`HTTP error! status: ${req.status}`);
+            }
+            
+            const data = await req.json();
+            
+            return data;
+        }
+        catch (error) {
+            throw new Error('clearRecycleDir', { cause: error });
         }
     }
 
@@ -195,7 +256,7 @@ class TeraBoxApp {
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.cookieString,
                 },
-                signal: AbortSignal.timeout(20000),
+                signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
             });
 
             if (!req.ok) {
@@ -206,8 +267,7 @@ class TeraBoxApp {
             return data;
         }
         catch (error) {
-            error.message = 'getUserInfo: ' + error.message;
-            throw error;
+            throw new Error('getUserInfo', { cause: error });
         }
     }
 
@@ -237,7 +297,7 @@ class TeraBoxApp {
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.cookieString,
                 },
-                signal: AbortSignal.timeout(10000),
+                signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
             });
 
             if (!req.ok) {
@@ -253,8 +313,7 @@ class TeraBoxApp {
             }
         }
         catch (error) {
-            error.message = 'precreateFile: ' + error.message;
-            throw error;
+            throw new Error('precreateFile', { cause: error });
         }
     }
 
@@ -296,7 +355,7 @@ class TeraBoxApp {
             duplex: 'half',
             signal: AbortSignal.any([
                 externalAbort,
-                AbortSignal.timeout(100000),
+                AbortSignal.timeout(TERABOX_CHUNK_TIMEOUT),
             ]),
             dispatcher,
         });
@@ -317,8 +376,43 @@ class TeraBoxApp {
             err.data = res;
             throw err
         }
-
+        
         return res;
+    }
+
+    async createFolder(remoteDir){
+        const formData = new URLSearchParams();
+        formData.append('path', remoteDir + '/');
+        formData.append('isdir', 1);
+        formData.append('block_list', '[]');
+        
+        const url = new URL(TERABOX_BASE_URL + '/api/create');
+        url.search = new URLSearchParams({
+            ...TERABOX_APP_PARAMS,
+            jsToken: this.app_data.jsToken,
+        });
+        
+        try{
+            const req = await fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'User-Agent': TERABOX_UA,
+                    'Cookie': this.cookieString,
+                },
+                signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
+            });
+            
+            if (!req.ok) {
+                throw new Error(`HTTP error! status: ${req.status}`);
+            }
+            
+            const responseData = await req.json();
+            return responseData;
+        }
+        catch (error) {
+            throw new Error('createFolder', { cause: error });
+        }
     }
 
     async createFile(remoteDir, filename, uploadid, sizebytes, md5json) {
@@ -345,7 +439,7 @@ class TeraBoxApp {
                     'Cookie': this.cookieString,
             },
             duplex: 'half',
-            signal: AbortSignal.timeout(10000),
+            signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
         });
 
         if (!req.ok) {

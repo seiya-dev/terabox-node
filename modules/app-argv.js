@@ -15,7 +15,7 @@ class Args {
                 choices: Object.keys(config.accounts),
                 type: 'string',
             },
-            i: {
+            l: {
                 alias: ['local'],
                 describe: 'Select Local Dir',
                 type: 'string',
@@ -23,7 +23,6 @@ class Args {
             r: {
                 alias: ['remote'],
                 describe: 'Select Remote Dir',
-                // default: config.remote_dir,
                 type: 'string',
             },
         })
