@@ -1,6 +1,5 @@
 node_modules
-rdata
-config.json
+.config.json
 *.mkv
 *.7z
 .vscode

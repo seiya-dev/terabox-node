@@ -11,14 +11,14 @@ import {
     loadJson, saveJson,
     selectAccount, showAccountInfo,
     selectLocalDir, selectRemoteDir,
-    hashFileChunks, uploadChunks,
+    hashFile, uploadChunks,
     unwrapErrorMessage,
 } from './modules/app-helper.js';
 
 // init app
 let app = {};
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const config = loadJson(path.resolve(__dirname, './config.json'));
+const config = loadJson(path.resolve(__dirname, './.config.json'));
 const meta = loadJson(path.resolve(__dirname, './package.json'));
 
 console.log('[INFO] TeraBox App', 'v' + meta.version, '(Uploader Module)');
@@ -59,10 +59,6 @@ async function selectDirs(){
     const localDir = await selectLocalDir(yargs.getArgv('l'));
     const remoteDir = await selectRemoteDir(yargs.getArgv('r'));
     
-    if(yargs.getArgv('l') == uploadDir){
-        console.log('? Upload Dir:', uploadDir);
-    }
-    
     await uploadDir(localDir, remoteDir);
     console.log('\n:: Done!\n');
 }
@@ -95,7 +91,9 @@ async function uploadDir(localDir, remoteDir){
         return;
     }
     
-    console.log('\n? Remote Dir:', remoteDir);
+    console.log('\n? Local Dir:', localDir);
+    console.log('? Remote Dir:', remoteDir);
+    const fsListFiles = fsList.filter(item => !item.is_dir);
     
     for(const fi of fsList){
         if(fi.is_dir){
@@ -105,31 +103,8 @@ async function uploadDir(localDir, remoteDir){
             continue;
         }
         
-        const file = fi.path;
-        const filename = path.basename(file);
-        
-        const findDir = remoteFsList.find(f => {
-            return f.isdir == 1 && f.server_filename == filename;
-        });
-        
-        if(findDir){
-            console.log(`\n:: Exist dir with same name as file: ${filename}, skipping...`);
-            continue;
-        }
-        
-        const findFile = remoteFsList.find(f => {
-            return f.isdir == 0 && f.server_filename == filename;
-        });
-        
-        if(findFile){
-            console.log(`\n:: File already uploaded: ${filename}, skipping...`);
-            continue;
-        }
-        
-        const index = fsList.indexOf(fi) + 1;
-        console.log(`\n:: Processing: [${index}/${fsList.length}] ${filename}`);
-        
-        const tbtempfile = file + '.tbtemp';
+        const filePath = fi.path;
+        const tbtempfile = filePath + '.tbtemp';
         const data = loadJson(tbtempfile);
         delete data.error;
         
@@ -139,24 +114,48 @@ async function uploadDir(localDir, remoteDir){
         if(!data.remote_dir){
             data.remote_dir = remoteDir;
         }
-    
-        if(!data.hashes){
-            console.log(':: Calculating hashes...');
-            data.hashes = await hashFileChunks(file);
+        
+        data.file = path.basename(filePath);
+        data.size = fs.statSync(filePath).size;
+        
+        const index = fsListFiles.indexOf(fi) + 1;
+        const indexStr = `${index}/${fsListFiles.length}`;
+        
+        console.log(`\n:: Processing: [${indexStr}] ${data.file}`);
+        
+        const findRemote = remoteFsList.find(f => {
+            return f.server_filename == data.file;
+        });
+        
+        if(findRemote){
+            console.log(`:: On Remote server Folder or File exist with same name, skipping...`);
+            continue;
         }
-    
+        
+        if(!data.hash || !data.hashes){
+            console.log(':: Calculating hashes...');
+            const fHashes = await hashFile(filePath);
+            data.hash = fHashes.file;
+            data.hashes = fHashes.chunks;
+        }
+        
         // convert hashes to string
         const hashes_json = JSON.stringify(data.hashes);
-    
+        
         console.log(`:: Precreate file...`);
         await app.updateAppData();
-        let preCreateData = {};
-    
+        
         try{
-            preCreateData = await app.precreateFile(data.upload_id, data.remote_dir, filename, hashes_json);
+            const preCreateData = await app.precreateFile(data, hashes_json);
             if(preCreateData.errno == 0){
+                // save new upload id
                 data.upload_id = preCreateData.uploadid;
                 saveJson(tbtempfile, data);
+                // fill uploaded data temporary
+                data.uploaded = new Array(data.hashes.length).fill(true);
+                for(const uBlock of preCreateData.block_list){
+                    data.uploaded[uBlock] = false;
+                }
             }
             else{
                 console.error('[ERROR] Can\'t precreate file:\n', preCreateData);
@@ -167,33 +166,33 @@ async function uploadDir(localDir, remoteDir){
             console.error('[ERROR] Can\'t precreate file:', error);
             continue;
         }
-    
-        // generate uploaded flags
-        data.uploaded = new Array(data.hashes.length).fill(true);
-        for(const uBlock of preCreateData.block_list){
-            data.uploaded[uBlock] = false;
-        }
-    
+        
         console.log(`:: Upload chunks...`)
-        const upload_status = await uploadChunks(app, data, file);
+        const upload_status = await uploadChunks(app, data, filePath);
         console.log(); // reset stdout after process.write
         delete data.uploaded;
-    
-        if(upload_status.ok){
+        
+        if(upload_status){
             try{
                 console.log(`:: Create file...`);
                 await app.updateAppData();
-                const upload_info = await app.createFile(data.remote_dir, filename, data.upload_id, upload_status.size, hashes_json);
-    
-                console.log(`:: Uploaded:`);
-                console.log('File:', upload_info.path.split('/').reverse()[0]);
+                const upload_info = await app.createFile(data, hashes_json);
+                
                 if(upload_info.errno == 0){
+                    console.log(`:: Uploaded:`);
+                    console.log('File:', upload_info.name.split('/').reverse()[0]);
+                    console.log('MD5:', upload_info.md5);
+                    // console.log(upload_info);
                     try{
                         fs.unlinkSync(tbtempfile);
                     }
                     catch(error){
                         console.error('[ERROR] Can\'t remove temp file:', unwrapErrorMessage(error));
                     }
+                }
+                else{
+                    console.log(`:: Failed to create file on Remote server:`);
+                    console.log(upload_info);
                 }
             }
             catch(error){

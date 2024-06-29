@@ -71,7 +71,10 @@ class TeraBoxApp {
 
     async getAccountData(){
         try{
-            const url = TERABOX_BASE_URL + '/rest/2.0/membership/proxy/user?method=query';
+            const url = new URL(TERABOX_BASE_URL + '/rest/2.0/membership/proxy/user');
+            url.search = new URLSearchParams({
+                method: 'query',
+            });
             const req = await fetch(url, {
                 headers: {
                     'User-Agent': TERABOX_UA,
@@ -117,7 +120,10 @@ class TeraBoxApp {
 
     async getQuota(){
         try{
-            const url = TERABOX_BASE_URL + '/api/quota?checkfree=1';
+            const url = new URL(TERABOX_BASE_URL + '/api/quota');
+            url.search = new URLSearchParams({
+                checkfree: 1,
+            });
             const req = await fetch(url, {
                 headers: {
                     'User-Agent': TERABOX_UA,
@@ -142,6 +148,9 @@ class TeraBoxApp {
 
     async getRemoteDir(remoteDir){
         try{
+            // alternative api:
+            // URL: `${TERABOX_BASE_URL}/rest/2.0/xpan/file`
+            // QS: `method=list&dir=${remoteDir}`
             const url = new URL(TERABOX_BASE_URL + '/api/list');
             url.search = new URLSearchParams({
                 ...TERABOX_APP_PARAMS,
@@ -152,7 +161,6 @@ class TeraBoxApp {
                 num: 20000,
                 page: 1,
                 showempty: 0,
-                'cancelToken[reason][message]': 'manual cancel',
             });
 
             const req = await fetch(url, {
@@ -271,18 +279,22 @@ class TeraBoxApp {
         }
     }
 
-    async precreateFile(uploadId, remoteDir, filename, md5json){
+    async precreateFile(data, md5json){
         const formData = new URLSearchParams();
-        formData.append('path', `${remoteDir}/${filename}`);
-        formData.append('target_path', remoteDir + '/');
+        formData.append('path', `${data.remote_dir}/${data.file}`);
+        formData.append('size', data.size);
+        formData.append('isdir', 0);
         formData.append('block_list', md5json);
-        if(uploadId && typeof uploadId == 'string' && uploadId != ''){
-            formData.append('uploadid', uploadId);
+        formData.append('autoinit', 1);
+        formData.append('rtype', 2);
+        if(data.upload_id && typeof data.upload_id == 'string' && data.upload_id != ''){
+            formData.append('uploadid', data.upload_id);
         }
-        formData.append('autoinit', '1');
-        formData.append('method', 'post');
-        formData.append('mode', '1');
-
+        formData.append('content-md5', data.hash);
+        // formData.append('slice-md5', ''); // first 256kb of file
+        // formData.append('local_ctime', '');
+        // formData.append('local_mtime', '');
+        
         const url = new URL(TERABOX_BASE_URL + '/api/precreate');
         url.search = new URLSearchParams({
             ...TERABOX_APP_PARAMS,
@@ -317,7 +329,7 @@ class TeraBoxApp {
         }
     }
 
-    async uploadChunk(remoteDir, filename, chunk, uploadid, md5hash, partseq, onBodySent, externalAbort) {
+    async uploadChunk(data, partseq, chunk, md5hash, onBodySent, externalAbort) {
         const formData = new FormData();
         formData.append('file', chunk);
 
@@ -339,8 +351,9 @@ class TeraBoxApp {
         url.search = new URLSearchParams({
             method: 'upload',
             ...TERABOX_APP_PARAMS,
-            path: remoteDir + '/' + filename,
-            uploadid: uploadid,
+            // type: 'tmpfile',
+            path: data.remote_dir + '/' + data.file,
+            uploadid: data.upload_id,
             partseq: partseq,
             uploadsign: 0,
         });
@@ -368,7 +381,7 @@ class TeraBoxApp {
 
         if (!res.error_code) {
             if (res.md5 !== md5hash) {
-                throw new Error(`MD5 hash mismatch for file (part: ${res.partseq})`)
+                throw new Error(`MD5 hash mismatch for file (part: ${res.partseq+1})`)
             }
         }
         else {
@@ -415,19 +428,25 @@ class TeraBoxApp {
         }
     }
 
-    async createFile(remoteDir, filename, uploadid, sizebytes, md5json) {
+    async createFile(data, md5json) {
         const formData = new URLSearchParams();
-        formData.append('path', `${remoteDir}/${filename}`);
-        formData.append('uploadid', uploadid);
-        formData.append('target_path', remoteDir + '/');
-        formData.append('size', sizebytes);
+        formData.append('path', `${data.remote_dir}/${data.file}`);
+        formData.append('size', data.size);
+        formData.append('isdir', 0);
         formData.append('block_list', md5json);;
-
+        formData.append('uploadid', data.upload_id);
+        formData.append('rtype', 2);
+        // formData.append('local_ctime', '');
+        // formData.append('local_mtime', '');
+        // formData.append('zip_quality', '');
+        // formData.append('zip_sign', '');
+        // formData.append('is_revision', 0);
+        // formData.append('mode', 2); // 2 is Batch Upload
+        // formData.append('exif_info', exifJsonStr);
+        
         const url = new URL(TERABOX_BASE_URL + '/api/create');
         url.search = new URLSearchParams({
             ...TERABOX_APP_PARAMS,
-            isdir: 0,
-            rtype: 1,
             jsToken: this.app_data.jsToken,
         });
 

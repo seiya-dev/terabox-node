@@ -10,11 +10,12 @@ import select from '@inquirer/select';
 import dateFormat from 'dateformat';
 import { filesize } from 'filesize';
 
-const vipMaxFile   = 20 * Math.pow(1024, 3); // 20 GiB
-const novipMaxFile =  4 * Math.pow(1024, 3); // 4 GiB
+const vip0MaxFile =  4 * Math.pow(1024, 3); // 4 GiB
+const vip1MaxFile = 10 * Math.pow(1024, 3); // 10 GiB
+const vip2MaxFile = 20 * Math.pow(1024, 3); // 20 GiB
 
-const chunkSize    =  4 * Math.pow(1024, 2); // 4 MiB
-const bigChunkSize =  8 * Math.pow(1024, 2); // 8 MiB
+const chunkSize1x =  4 * Math.pow(1024, 2); // 4 MiB
+const chunkSize2x =  8 * Math.pow(1024, 2); // 8 MiB
 
 const maxTasks = 10;
 const maxTries = 5;
@@ -129,35 +130,39 @@ async function askRemoteDir(){
     return await input({ message: 'Remote Dir:' });
 }
 
-async function hashFileChunks(filePath) {
+async function hashFile(filePath) {
     const stat = fs.statSync(filePath);
-    const splitSize = stat.size > novipMaxFile ? bigChunkSize : chunkSize;
+    const splitSize = stat.size > vip0MaxFile ? chunkSize2x : chunkSize1x;
     return new Promise((resolve, reject) => {
         const fileStream = fs.createReadStream(filePath);
-        const hashes = [];
-        let currentHash = crypto.createHash('md5');
+        const hashes = {file: '', chunks: []};
+        let chunkHash = crypto.createHash('md5');
+        let fileHash = crypto.createHash('md5');
         let bytesRead = 0;
         
         fileStream.on('data', (chunk) => {
+            fileHash.update(chunk);
+            
             let offset = 0;
             while (offset < chunk.length) {
                 const remainingBytes = splitSize - bytesRead;
                 const end = offset + remainingBytes > chunk.length ? chunk.length : offset + remainingBytes;
-                currentHash.update(chunk.slice(offset, end));
+                chunkHash.update(chunk.slice(offset, end));
                 bytesRead += end - offset;
                 offset = end;
                 
                 if (bytesRead >= splitSize) {
-                    hashes.push(currentHash.digest('hex'));
-                    currentHash = crypto.createHash('md5');
+                    hashes.chunks.push(chunkHash.digest('hex'));
+                    chunkHash = crypto.createHash('md5');
                     bytesRead = 0;
                 }
             }
         });
         
         fileStream.on('end', () => {
+            hashes.file = fileHash.digest('hex');
             if (bytesRead > 0) {
-                hashes.push(currentHash.digest('hex'));
+                hashes.chunks.push(chunkHash.digest('hex'));
             }
             resolve(hashes);
         });
@@ -166,12 +171,7 @@ async function hashFileChunks(filePath) {
     });
 }
 
-async function runWithConcurrencyLimit(size, uploaded, tasks, limit) {
-    const upload_status = {};
-    upload_status.ok = false;
-    upload_status.size = size;
-    upload_status.uploaded = uploaded;
-    
+async function runWithConcurrencyLimit(tasks, limit) {
     let index = 0;
     let failed = false;
     
@@ -179,9 +179,6 @@ async function runWithConcurrencyLimit(size, uploaded, tasks, limit) {
         while (index < tasks.length && !failed) {
             const currentIndex = index++;
             const result = await tasks[currentIndex]();
-            if(result){
-                upload_status.uploaded[result.part] = result.done;
-            }
         }
     };
     
@@ -189,20 +186,19 @@ async function runWithConcurrencyLimit(size, uploaded, tasks, limit) {
     
     try{
         await Promise.all(workers);
-        upload_status.ok = true;
+        return true;
     }
     catch(error){
-        failed = true;
         console.error('\n[ERROR]', unwrapErrorMessage(error));
+        failed = true;
+        return false;
     }
-
-    return upload_status;
 };
 
-async function uploadChunkTask(app, remoteDir, filename, filePath, uploadid, hashes, stat, partSeq, uploadedData, externalAbort) {
-    const splitSize = stat.size > novipMaxFile ? bigChunkSize : chunkSize;
+async function uploadChunkTask(app, data, filePath, partSeq, uploadedData, externalAbort) {
+    const splitSize = data.size > vip0MaxFile ? chunkSize2x : chunkSize1x;
     const start = partSeq * splitSize;
-    const end = Math.min(start + splitSize, stat.size) - 1;
+    const end = Math.min(start + splitSize, data.size) - 1;
     
     const onBodySent = (chunk) => {
         if (externalAbort.aborted) {
@@ -216,18 +212,23 @@ async function uploadChunkTask(app, remoteDir, filename, filePath, uploadid, has
         
         const uploadedBytesSum = Object.values(uploadedData.parts).reduce((acc, value) => acc + value, 0);
         const uploadedBytesStr = filesize(uploadedBytesSum, {standard: 'iec', round: 3, pad: true});
-        const filesizeBytesStr = filesize(stat.size, {standard: 'iec', round: 3, pad: true});
+        const filesizeBytesStr = filesize(data.size, {standard: 'iec', round: 3, pad: true});
+        const uploadedBytesFStr = `(${uploadedBytesStr}/${filesizeBytesStr})`;
+        
         const uploadSpeed = uploadedData.all * 1000 / (Date.now() - uploadedData.start);
         const uploadSpeedStr = filesize(uploadSpeed, {standard: 'si', round: 2, pad: true}) + '/s';
         
-        const remainingTime = Math.max((stat.size - uploadedBytesSum) / uploadSpeed, 0);
+        const remainingTime = Math.max((data.size - uploadedBytesSum) / uploadSpeed, 0);
         const remainingSeconds = Math.floor(remainingTime % 60);
         const remainingMinutes = Math.floor((remainingTime % 3600) / 60);
         const remainingHours = Math.floor(remainingTime / 3600);
-        const [remH, remM, remS] = [remainingHours, remainingMinutes, remainingSeconds].map(t => String(t).padStart(2, '0'))
+        const [remH, remM, remS] = [remainingHours, remainingMinutes, remainingSeconds].map(t => String(t).padStart(2, '0'));
+        const remainingTimeStr = `${remH}h${remM}m${remS}s left...`;
         
-        const percentage = Math.round((uploadedBytesSum / stat.size) * 100);
-        process.stdout.write(`Uploading: ${percentage}% (${uploadedBytesStr}/${filesizeBytesStr}) ${uploadSpeedStr}, ${remH}h${remM}m${remS}s left...`);
+        const percentage = Math.round((uploadedBytesSum / data.size) * 100);
+        const percentageFStr = `${percentage}% ${uploadedBytesFStr}`;
+        const uploadStatusArr = [percentageFStr, uploadSpeedStr, remainingTimeStr];
+        process.stdout.write(`Uploading: ${uploadStatusArr.join(', ')}`);
     }
     
     for (let i = 0; i < maxTries; i++) {
@@ -248,8 +249,8 @@ async function uploadChunkTask(app, remoteDir, filename, filePath, uploadid, has
         }
         
         try{
-            await app.uploadChunk(remoteDir, filename, blob, uploadid, hashes[partSeq], partSeq, onBodySent, externalAbort);
-            return { part: partSeq, done: true };
+            const r = await app.uploadChunk(data, partSeq, blob, data.hashes[partSeq], onBodySent, externalAbort);
+            return { part: partSeq, r, done: true };
         }
         catch(error){
             if (externalAbort.aborted) {
@@ -282,24 +283,19 @@ async function uploadChunkTask(app, remoteDir, filename, filePath, uploadid, has
 }
 
 async function uploadChunks(app, data, filePath) {
-    const filename = path.basename(filePath);
-    const file = await fsPromises.open(filePath);
-    const stat = await file.stat();
-    const splitSize = stat.size > novipMaxFile ? bigChunkSize : chunkSize;
-    const totalChunks = Math.ceil(stat.size / splitSize);
-    await file.close();
+    const splitSize = data.size > vip0MaxFile ? chunkSize2x : chunkSize1x;
+    const totalChunks = data.hashes.length;
     
     const externalAbortController = new AbortController();
-
+    
     const tasks = [];
     const uploadedData = {
-        start: Date.now(),
         all: 0,
+        start: Date.now(),
         parts: {},
     };
     
-    let upload_status;
-    if(data.uploaded.filter((pStatus) => pStatus == false).length > 0){
+    if(data.uploaded.filter(pStatus => pStatus == false).length > 0){
         for (let partSeq = 0; partSeq < totalChunks; partSeq++) {
             if(data.uploaded[partSeq]){
                 uploadedData.parts[partSeq] = splitSize;
@@ -309,23 +305,17 @@ async function uploadChunks(app, data, filePath) {
         for (let partSeq = 0; partSeq < totalChunks; partSeq++) {
             if(!data.uploaded[partSeq]){
                 tasks.push(() => {
-                    return uploadChunkTask(app, data.remote_dir, filename, filePath, data.upload_id, data.hashes, stat, partSeq, uploadedData, externalAbortController.signal);
+                    return uploadChunkTask(app, data, filePath, partSeq, uploadedData, externalAbortController.signal);
                 });
             }
         }
         
-        upload_status = await runWithConcurrencyLimit(stat.size, data.uploaded, tasks, maxTasks);
+        const upload_status = await runWithConcurrencyLimit(tasks, maxTasks);
         externalAbortController.abort();
+        return upload_status;
     }
-    else{
-        upload_status = {
-            ok: true,
-            size: stat.size,
-            uploaded: data.uploaded,
-        };
-    }
-
-    return upload_status;
+    
+    return true;
 }
 
 function unwrapErrorMessage(err) {
@@ -349,6 +339,6 @@ export {
     loadJson, saveJson,
     selectAccount, showAccountInfo,
     selectLocalDir, selectRemoteDir,
-    hashFileChunks, uploadChunks,
+    hashFile, uploadChunks,
     unwrapErrorMessage
 };
