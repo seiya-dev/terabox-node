@@ -1,4 +1,4 @@
-//#nodejs
+#!/usr/bin/env node
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -11,7 +11,8 @@ import {
     loadJson, saveJson,
     selectAccount, showAccountInfo,
     selectLocalDir, selectRemoteDir,
-    hashFile, uploadChunks,
+    uploadChunks, uploadFile, 
+    hashFile, getChunkSize,
     unwrapErrorMessage,
 } from './modules/app-helper.js';
 
@@ -98,7 +99,7 @@ async function uploadDir(localDir, remoteDir){
     for(const fi of fsList){
         if(fi.is_dir){
             fi.path = fi.path.replace(/\/$/, '');
-            const remoteDirNew = remoteDir + fi.path.split('/').reverse()[0] + '/';
+            const remoteDirNew = remoteDir + fi.path.split('/').at(-1) + '/';
             await uploadDir(fi.path, remoteDirNew);
             continue;
         }
@@ -123,6 +124,16 @@ async function uploadDir(localDir, remoteDir){
         
         console.log(`\n:: Processing: [${indexStr}] ${data.file}`);
         
+        if(data.size < 1){
+            console.log(`:: Empty file, skipping...`);
+            continue;
+        }
+        
+        if(data.size > getChunkSize(data.size) * 1024){
+            console.log(`:: File too big, skipping...`);
+            continue;
+        }
+        
         const findRemote = remoteFsList.find(f => {
             return f.server_filename == data.file;
         });
@@ -132,27 +143,22 @@ async function uploadDir(localDir, remoteDir){
             continue;
         }
         
-        if(!data.hash || !data.hashes){
+        if(!data.hash){
             console.log(':: Calculating hashes...');
-            const fHashes = await hashFile(filePath);
-            data.hash = fHashes.file;
-            data.hashes = fHashes.chunks;
+            data.hash = await hashFile(filePath);
         }
-        
-        // convert hashes to string
-        const hashes_json = JSON.stringify(data.hashes);
         
         console.log(`:: Precreate file...`);
         await app.updateAppData();
         
         try{
-            const preCreateData = await app.precreateFile(data, hashes_json);
+            const preCreateData = await app.precreateFile(data);
             if(preCreateData.errno == 0){
                 // save new upload id
                 data.upload_id = preCreateData.uploadid;
                 saveJson(tbtempfile, data);
                 // fill uploaded data temporary
-                data.uploaded = new Array(data.hashes.length).fill(true);
+                data.uploaded = new Array(data.hash.chunks.length).fill(true);
                 for(const uBlock of preCreateData.block_list){
                     data.uploaded[uBlock] = false;
                 }
@@ -167,8 +173,16 @@ async function uploadDir(localDir, remoteDir){
             continue;
         }
         
-        console.log(`:: Upload chunks...`)
-        const upload_status = await uploadChunks(app, data, filePath);
+        
+        let upload_status;
+        if(data.size <= getChunkSize(data.size)){
+            console.log(`:: Upload file...`);
+            upload_status = await uploadFile(app, data, filePath);
+        }
+        else{
+            console.log(`:: Upload chunks...`);
+            upload_status = await uploadChunks(app, data, filePath);
+        }
         console.log(); // reset stdout after process.write
         delete data.uploaded;
         
@@ -176,12 +190,10 @@ async function uploadDir(localDir, remoteDir){
             try{
                 console.log(`:: Create file...`);
                 await app.updateAppData();
-                const upload_info = await app.createFile(data, hashes_json);
+                const upload_info = await app.createFile(data);
                 
                 if(upload_info.errno == 0){
-                    console.log(`:: Uploaded:`);
-                    console.log('File:', upload_info.name.split('/').reverse()[0]);
-                    console.log('MD5:', upload_info.md5);
+                    console.log(`:: Uploaded:`, upload_info.name.split('/').at(-1));
                     // console.log(upload_info);
                     try{
                         fs.unlinkSync(tbtempfile);

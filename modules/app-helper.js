@@ -10,13 +10,6 @@ import select from '@inquirer/select';
 import dateFormat from 'dateformat';
 import { filesize } from 'filesize';
 
-const vip0MaxFile =  4 * Math.pow(1024, 3); // 4 GiB
-const vip1MaxFile = 10 * Math.pow(1024, 3); // 10 GiB
-const vip2MaxFile = 20 * Math.pow(1024, 3); // 20 GiB
-
-const chunkSize1x =  4 * Math.pow(1024, 2); // 4 MiB
-const chunkSize2x =  8 * Math.pow(1024, 2); // 8 MiB
-
 const maxTasks = 10;
 const maxTries = 5;
 
@@ -39,7 +32,7 @@ async function selectAccount(config){
     for(const a of Object.keys(config.accounts)){
         accounts.push({
             name: a,
-            value: config.accounts[a]
+            value: config.accounts[a],
         });
     }
     const answer = await select({
@@ -51,12 +44,25 @@ async function selectAccount(config){
 
 async function showAccountInfo(app){
     const acc_info = await app.getPassport();
-    console.info('[INFO] USER:', acc_info.data.display_name);
     const acc_data = await app.getAccountData();
+    const acc_quota = await app.getQuota();
+    
+    const reg_country = acc_data.data.reg_country.name;
+    console.info('[INFO] USER:', acc_info.data.display_name, '/ Reg Country:', reg_country);
+    
+    const spaceUsed = filesize(acc_quota.used, {standard: 'iec', round: 3, pad: true});
+    const spaceTotal = filesize(acc_quota.total, {standard: 'iec', round: 3, pad: true});
+    const spaceFree = filesize(acc_quota.available, {standard: 'iec', round: 3, pad: true});
+    console.info('[INFO] Space:', spaceFree, '/', spaceTotal, '[FREE / TOTAL]');
+    
     const is_vip = acc_data.data.member_info.is_vip;
     const vip_end_time = acc_data.data.member_info.vip_end_time * 1000;
-    console.info('[INFO] VIP:', `You are a ${is_vip == 1 ? 'vip' : 'non-vip'} user.`);
-    if(is_vip == 1){ console.info('[INFO] VIP: End on', dateFormat(vip_end_time, 'UTC:yyyy-mm-dd HH:MM:ss'), 'UTC'); }
+    const vip_left_time = Math.ceil(acc_data.data.member_info.vip_left_time / (24*60*60));
+    
+    if(is_vip == 1){ 
+        const vip_end_date = dateFormat(vip_end_time, 'UTC:yyyy-mm-dd');
+        console.info('[INFO] VIP: End on', vip_end_date, '/', vip_left_time, 'days left'); 
+    }
 }
 
 async function selectLocalDir(inputDir){
@@ -130,29 +136,98 @@ async function askRemoteDir(){
     return await input({ message: 'Remote Dir:' });
 }
 
+function getChunkSize(fileSize) {
+    const MiB = 1024 * 1024;
+    const GiB = 1024 * MiB;
+    
+    const limitSizes = [4, 8, 16, 32, 64, 128];
+    
+    for (const limit of limitSizes) {
+        if (fileSize <= limit * GiB) {
+            return limit * MiB;
+        }
+    }
+    
+    return limitSizes.at(-1) * MiB;
+}
+
+const crcTable = (() => {
+    const table = [];
+    for (let n = 0; n < 256; n++) {
+        let c = n;
+        for (let k = 0; k < 8; k++) {
+            c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+        }
+        table[n] = c;
+    }
+    return table;
+})();
+
+class createHashCRC {
+    constructor() {
+        this.crcHash = -1;
+    }
+    update(data){
+        for (let i = 0; i < data.length; i++) {
+            this.crcHash = (this.crcHash >>> 8) ^ crcTable[(this.crcHash ^ data[i]) & 0xFF];
+        }
+    }
+    digest(type){
+        const finalCrcHash = (this.crcHash ^ (-1)) >>> 0;
+        if(type == 'hex'){
+            return finalCrcHash.toString(16);
+        }
+        return finalCrcHash;
+    }
+}
+
 async function hashFile(filePath) {
     const stat = fs.statSync(filePath);
-    const splitSize = stat.size > vip0MaxFile ? chunkSize2x : chunkSize1x;
+    const splitSize = getChunkSize(stat.size);
     return new Promise((resolve, reject) => {
         const fileStream = fs.createReadStream(filePath);
-        const hashes = {file: '', chunks: []};
-        let chunkHash = crypto.createHash('md5');
-        let fileHash = crypto.createHash('md5');
-        let bytesRead = 0;
         
-        fileStream.on('data', (chunk) => {
-            fileHash.update(chunk);
+        const hashData = {
+            file: '', 
+            slice: '', 
+            crc: '', 
+            chunks: []
+        };
+        
+        const sliceSize = 256 * 1024;
+        
+        const fileHash = crypto.createHash('md5');
+        const sliceHash = crypto.createHash('md5');
+        const crcHash = new createHashCRC();
+        let chunkHash = crypto.createHash('md5');
+        
+        let bytesRead = 0;
+        let allBytesRead = 0;
+        fileStream.on('data', (data) => {
+            fileHash.update(data);
+            crcHash.update(data);
             
             let offset = 0;
-            while (offset < chunk.length) {
-                const remainingBytes = splitSize - bytesRead;
-                const end = offset + remainingBytes > chunk.length ? chunk.length : offset + remainingBytes;
-                chunkHash.update(chunk.slice(offset, end));
+            while (offset < data.length) {
+                let remainingBytes = splitSize - bytesRead;
+                if (allBytesRead < sliceSize) {
+                    remainingBytes = Math.min(sliceSize - allBytesRead, remainingBytes);
+                }
+                
+                const end = offset + remainingBytes > data.length ? data.length : offset + remainingBytes;
+                const chunk = data.subarray(offset, end);
+                chunkHash.update(chunk);
+                
+                allBytesRead += end - offset;
                 bytesRead += end - offset;
                 offset = end;
                 
+                if (allBytesRead <= sliceSize) {
+                    sliceHash.update(chunk);
+                }
+                
                 if (bytesRead >= splitSize) {
-                    hashes.chunks.push(chunkHash.digest('hex'));
+                    hashData.chunks.push(chunkHash.digest('hex'));
                     chunkHash = crypto.createHash('md5');
                     bytesRead = 0;
                 }
@@ -160,11 +235,14 @@ async function hashFile(filePath) {
         });
         
         fileStream.on('end', () => {
-            hashes.file = fileHash.digest('hex');
+            hashData.file = fileHash.digest('hex');
+            hashData.slice = sliceHash.digest('hex');
+            hashData.crc = crcHash.digest('hex');
             if (bytesRead > 0) {
-                hashes.chunks.push(chunkHash.digest('hex'));
+                hashData.chunks.push(chunkHash.digest('hex'));
             }
-            resolve(hashes);
+            
+            resolve(hashData);
         });
         
         fileStream.on('error', reject);
@@ -195,8 +273,33 @@ async function runWithConcurrencyLimit(tasks, limit) {
     }
 };
 
+function printUploadLog(uploadedData, fsize){
+    readline.clearLine(process.stdout, 0);
+    readline.cursorTo(process.stdout, 0, null);
+    
+    const uploadedBytesSum = Object.values(uploadedData.parts).reduce((acc, value) => acc + value, 0);
+    const uploadedBytesStr = filesize(uploadedBytesSum, {standard: 'iec', round: 3, pad: true});
+    const filesizeBytesStr = filesize(fsize, {standard: 'iec', round: 3, pad: true});
+    const uploadedBytesFStr = `(${uploadedBytesStr}/${filesizeBytesStr})`;
+    
+    const uploadSpeed = uploadedData.all * 1000 / (Date.now() - uploadedData.start);
+    const uploadSpeedStr = filesize(uploadSpeed, {standard: 'si', round: 2, pad: true}) + '/s';
+    
+    const remainingTime = Math.max((fsize - uploadedBytesSum) / uploadSpeed, 0);
+    const remainingSeconds = Math.floor(remainingTime % 60);
+    const remainingMinutes = Math.floor((remainingTime % 3600) / 60);
+    const remainingHours = Math.floor(remainingTime / 3600);
+    const [remH, remM, remS] = [remainingHours, remainingMinutes, remainingSeconds].map(t => String(t).padStart(2, '0'));
+    const remainingTimeStr = `${remH}h${remM}m${remS}s left...`;
+    
+    const percentage = Math.round((uploadedBytesSum / fsize) * 100);
+    const percentageFStr = `${percentage}% ${uploadedBytesFStr}`;
+    const uploadStatusArr = [percentageFStr, uploadSpeedStr, remainingTimeStr];
+    process.stdout.write(`Uploading: ${uploadStatusArr.join(', ')}`);
+}
+
 async function uploadChunkTask(app, data, filePath, partSeq, uploadedData, externalAbort) {
-    const splitSize = data.size > vip0MaxFile ? chunkSize2x : chunkSize1x;
+    const splitSize = getChunkSize(data.size);
     const start = partSeq * splitSize;
     const end = Math.min(start + splitSize, data.size) - 1;
     
@@ -204,31 +307,10 @@ async function uploadChunkTask(app, data, filePath, partSeq, uploadedData, exter
         if (externalAbort.aborted) {
             return;
         }
-        
         uploadedData.all += chunk.length;
         uploadedData.parts[partSeq] += chunk.length;
-        readline.clearLine(process.stdout, 0);
-        readline.cursorTo(process.stdout, 0, null);
         
-        const uploadedBytesSum = Object.values(uploadedData.parts).reduce((acc, value) => acc + value, 0);
-        const uploadedBytesStr = filesize(uploadedBytesSum, {standard: 'iec', round: 3, pad: true});
-        const filesizeBytesStr = filesize(data.size, {standard: 'iec', round: 3, pad: true});
-        const uploadedBytesFStr = `(${uploadedBytesStr}/${filesizeBytesStr})`;
-        
-        const uploadSpeed = uploadedData.all * 1000 / (Date.now() - uploadedData.start);
-        const uploadSpeedStr = filesize(uploadSpeed, {standard: 'si', round: 2, pad: true}) + '/s';
-        
-        const remainingTime = Math.max((data.size - uploadedBytesSum) / uploadSpeed, 0);
-        const remainingSeconds = Math.floor(remainingTime % 60);
-        const remainingMinutes = Math.floor((remainingTime % 3600) / 60);
-        const remainingHours = Math.floor(remainingTime / 3600);
-        const [remH, remM, remS] = [remainingHours, remainingMinutes, remainingSeconds].map(t => String(t).padStart(2, '0'));
-        const remainingTimeStr = `${remH}h${remM}m${remS}s left...`;
-        
-        const percentage = Math.round((uploadedBytesSum / data.size) * 100);
-        const percentageFStr = `${percentage}% ${uploadedBytesFStr}`;
-        const uploadStatusArr = [percentageFStr, uploadSpeedStr, remainingTimeStr];
-        process.stdout.write(`Uploading: ${uploadStatusArr.join(', ')}`);
+        printUploadLog(uploadedData, data.size);
     }
     
     for (let i = 0; i < maxTries; i++) {
@@ -249,8 +331,9 @@ async function uploadChunkTask(app, data, filePath, partSeq, uploadedData, exter
         }
         
         try{
-            const r = await app.uploadChunk(data, partSeq, blob, data.hashes[partSeq], onBodySent, externalAbort);
+            const r = await app.uploadChunk(data, partSeq, blob, onBodySent, externalAbort);
             return { part: partSeq, r, done: true };
+            break;
         }
         catch(error){
             if (externalAbort.aborted) {
@@ -283,8 +366,8 @@ async function uploadChunkTask(app, data, filePath, partSeq, uploadedData, exter
 }
 
 async function uploadChunks(app, data, filePath) {
-    const splitSize = data.size > vip0MaxFile ? chunkSize2x : chunkSize1x;
-    const totalChunks = data.hashes.length;
+    const splitSize = getChunkSize(data.size);
+    const totalChunks = data.hash.chunks.length;
     
     const externalAbortController = new AbortController();
     
@@ -318,11 +401,70 @@ async function uploadChunks(app, data, filePath) {
     return true;
 }
 
+async function uploadFile(app, data, filePath){
+    const uploadedData = {
+        all: 0,
+        start: Date.now(),
+        parts: {},
+    };
+    
+    const onBodySent = (chunk) => {
+        uploadedData.all += chunk.length;
+        uploadedData.parts[0] += chunk.length;
+        
+        printUploadLog(uploadedData, data.size);
+    }
+    
+    for (let i = 0; i < maxTries; i++) {
+        
+        uploadedData.parts[0] = 0;
+        const chunk = fs.createReadStream(filePath);
+        const blob = {
+            type: 'application/octet-stream',
+            name: 'file',
+            [Symbol.toStringTag]: 'Blob',
+            size: data.size,
+            stream() {
+                return chunk
+            }
+        }
+        
+        try{
+            const r = await app.uploadChunk(data, 0, blob, onBodySent);
+            return { r, done: true };
+            break;
+        }
+        catch(error){
+            readline.clearLine(process.stdout, 0);
+            readline.cursorTo(process.stdout, 0, null);
+            
+            let message = error.message;
+            if(error.cause){
+                message += ' Cause';
+                if(error.cause.errno){
+                    message += ' #' + error.cause.errno;
+                }
+                if(error.cause.code){
+                    message += ' ' + error.cause.code;
+                }
+            }
+            
+            const uplFailedMsg1 = ' -> Upload failed';
+            const uplFailedMsg2 = `: ${message}`;
+            const doRetry = i+1 != maxTries ? `, retry #${i+1}` : '';
+            
+            process.stdout.write(uplFailedMsg1 + uplFailedMsg2 + doRetry + '...\n');
+        }
+    }
+    
+    return { done: false };
+}
+
 function unwrapErrorMessage(err) {
     if (!err) {
         return;
     }
-
+    
     let e = err;
     let res = err.message;
     while (e.cause) {
@@ -331,7 +473,7 @@ function unwrapErrorMessage(err) {
             res += ': ' + e.message;
         }
     }
-
+    
     return res;
 }
 
@@ -339,6 +481,7 @@ export {
     loadJson, saveJson,
     selectAccount, showAccountInfo,
     selectLocalDir, selectRemoteDir,
-    hashFile, uploadChunks,
+    uploadChunks, uploadFile,
+    hashFile, getChunkSize,
     unwrapErrorMessage
 };

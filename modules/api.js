@@ -1,9 +1,9 @@
 import * as undici from 'undici';
 
+// https://www.terabox.com/login?from=pc&lang=en&show_third_login=1
 const TERABOX_UA = 'terabox;1.31.0.1;PC;PC-Windows;10.0.22631;WindowsTeraBox';
 const TERABOX_BASE_URL = 'https://www.terabox.com';
 const TERABOX_API_TIMEOUT = 10000;
-const TERABOX_CHUNK_TIMEOUT = 60000;
 const TERABOX_APP_PARAMS = {
     app_id: 250528,
     web: 1,
@@ -279,19 +279,20 @@ class TeraBoxApp {
         }
     }
 
-    async precreateFile(data, md5json){
+    async precreateFile(data){
         const formData = new URLSearchParams();
         formData.append('path', `${data.remote_dir}/${data.file}`);
         formData.append('size', data.size);
         formData.append('isdir', 0);
-        formData.append('block_list', md5json);
+        formData.append('block_list', JSON.stringify(data.hash.chunks));
         formData.append('autoinit', 1);
         formData.append('rtype', 2);
         if(data.upload_id && typeof data.upload_id == 'string' && data.upload_id != ''){
             formData.append('uploadid', data.upload_id);
         }
-        formData.append('content-md5', data.hash);
-        // formData.append('slice-md5', ''); // first 256kb of file
+        formData.append('content-md5', data.hash.file);
+        formData.append('slice-md5', data.hash.slice); // first 256kb of file
+        formData.append('content-crc', data.hash.crc);
         // formData.append('local_ctime', '');
         // formData.append('local_mtime', '');
         
@@ -300,7 +301,7 @@ class TeraBoxApp {
             ...TERABOX_APP_PARAMS,
             jsToken: this.app_data.jsToken,
         });
-
+        
         try{
             const req = await fetch(url, {
                 method: 'POST',
@@ -311,11 +312,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
             });
-
+            
             if (!req.ok) {
                 throw new Error(`HTTP error! status: ${req.status}`);
             }
-
+            
             const responseData = await req.json();
             if (responseData.uploadid) {
                 return responseData;
@@ -328,25 +329,36 @@ class TeraBoxApp {
             throw new Error('precreateFile', { cause: error });
         }
     }
-
-    async uploadChunk(data, partseq, chunk, md5hash, onBodySent, externalAbort) {
+    
+    async uploadChunk(data, partseq, chunk, onBodySent, externalAbort) {
+        externalAbort = externalAbort ? externalAbort : new AbortController().signal;
+        
         const formData = new FormData();
         formData.append('file', chunk);
 
+        const timeoutAborter = new AbortController;
+        let timeoutId = setTimeout(() => {
+            timeoutAborter.abort();
+        }, TERABOX_API_TIMEOUT);
+        
         const undiciInterceptor = (dispatch) => {
             class undiciInterceptorBody extends undici.DecoratorHandler {
                 onBodySent(chunk) {
-                    if (onBodySent) onBodySent(chunk);
+                    timeoutId.refresh();
+
+                    if (onBodySent){
+                        onBodySent(chunk);
+                    }
                 }
             }
-
+            
             return function InterceptedDispatch(opts, handler) {
                 return dispatch(opts, new undiciInterceptorBody(handler));
             };
         };
-
+        
         let dispatcher = new undici.Agent().compose(undiciInterceptor);
-
+        
         const url = new URL(TERABOX_BASE_URL.replace('www', 'c-jp') + '/rest/2.0/pcs/superfile2');
         url.search = new URLSearchParams({
             method: 'upload',
@@ -355,9 +367,8 @@ class TeraBoxApp {
             path: data.remote_dir + '/' + data.file,
             uploadid: data.upload_id,
             partseq: partseq,
-            uploadsign: 0,
         });
-
+        
         const req = await fetch(url, {
             method: 'POST',
             body: formData,
@@ -368,19 +379,21 @@ class TeraBoxApp {
             duplex: 'half',
             signal: AbortSignal.any([
                 externalAbort,
-                AbortSignal.timeout(TERABOX_CHUNK_TIMEOUT),
+                timeoutAborter.signal,
             ]),
             dispatcher,
         });
 
+        clearTimeout(timeoutId);
+        
         if (!req.ok) {
             throw new Error(`HTTP error! status: ${req.status}`);
         }
-
+        
         const res = await req.json();
-
+        
         if (!res.error_code) {
-            if (res.md5 !== md5hash) {
+            if (res.md5 !== data.hash.chunks[partseq]) {
                 throw new Error(`MD5 hash mismatch for file (part: ${res.partseq+1})`)
             }
         }
@@ -392,7 +405,7 @@ class TeraBoxApp {
         
         return res;
     }
-
+    
     async createFolder(remoteDir){
         const formData = new URLSearchParams();
         formData.append('path', remoteDir + '/');
@@ -428,12 +441,12 @@ class TeraBoxApp {
         }
     }
 
-    async createFile(data, md5json) {
+    async createFile(data) {
         const formData = new URLSearchParams();
         formData.append('path', `${data.remote_dir}/${data.file}`);
         formData.append('size', data.size);
         formData.append('isdir', 0);
-        formData.append('block_list', md5json);;
+        formData.append('block_list', JSON.stringify(data.hash.chunks));;
         formData.append('uploadid', data.upload_id);
         formData.append('rtype', 2);
         // formData.append('local_ctime', '');
