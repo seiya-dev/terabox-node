@@ -109,15 +109,18 @@ async function uploadDir(localDir, remoteDir){
         const data = loadJson(tbtempfile);
         delete data.error;
         
-        if(!data.upload_id){
+        if(!data.upload_id || typeof(data.upload_id) != 'string'){
             data.upload_id = '';
         }
-        if(!data.remote_dir){
+        if(!data.remote_dir || typeof(data.remote_dir) != 'string'){
             data.remote_dir = remoteDir;
         }
-        
-        data.file = path.basename(filePath);
-        data.size = fs.statSync(filePath).size;
+        if(!data.file || typeof(data.file) != 'string'){
+            data.file = path.basename(filePath);
+        }
+        if(!data.size || isNaN(data.size)){
+            data.size = fs.statSync(filePath).size;
+        }
         
         const index = fsListFiles.indexOf(fi) + 1;
         const indexStr = `${index}/${fsListFiles.length}`;
@@ -172,7 +175,6 @@ async function uploadDir(localDir, remoteDir){
             console.error('[ERROR] Can\'t precreate file:', error);
             continue;
         }
-        
         
         try {
             console.log(`:: Trying RapidUpload file...`);
