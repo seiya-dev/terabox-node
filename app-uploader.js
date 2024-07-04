@@ -99,7 +99,7 @@ async function uploadDir(localDir, remoteDir){
     for(const fi of fsList){
         if(fi.is_dir){
             fi.path = fi.path.replace(/\/$/, '');
-            const remoteDirNew = remoteDir + fi.path.split('/').at(-1) + '/';
+            const remoteDirNew = remoteDir + '/' + fi.path.split('/').at(-1);
             await uploadDir(fi.path, remoteDirNew);
             continue;
         }
