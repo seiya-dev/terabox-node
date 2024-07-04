@@ -104,11 +104,11 @@ async function cleanupRemotePath(remoteDir){
     if(remoteDir.match(/^root/)){
         remoteDir = remoteDir.replace(/^root/, '');
     }
-    if(!remoteDir.match(/\/$/)){
-        remoteDir += '/';
-    }
     remoteDir = '/' + remoteDir.split('/').map(v => cleanupName(v)).join('/');
     remoteDir = remoteDir.replace(/\/+/g, '/');
+    if(remoteDir != '/' && remoteDir.match(/\/$/)){
+        remoteDir = remoteDir.replace(/\/$/, '');
+    }
     return remoteDir;
 }
 
@@ -190,7 +190,7 @@ async function hashFile(filePath) {
         const hashData = {
             file: '', 
             slice: '', 
-            crc: '', 
+            crc32: 0, 
             chunks: []
         };
         
@@ -237,7 +237,7 @@ async function hashFile(filePath) {
         fileStream.on('end', () => {
             hashData.file = fileHash.digest('hex');
             hashData.slice = sliceHash.digest('hex');
-            hashData.crc = crcHash.digest('hex');
+            hashData.crc32 = crcHash.digest('dec');
             if (bytesRead > 0) {
                 hashData.chunks.push(chunkHash.digest('hex'));
             }

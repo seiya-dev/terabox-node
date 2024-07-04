@@ -11,12 +11,17 @@ const TERABOX_APP_PARAMS = {
     clienttype: 0,
 };
 
+function makeRemoteFPath(sdir, sfile){
+    const tdir = sdir.match(/\/$/) ? sdir : sdir + '/';
+    return tdir + sfile;
+}
+
 class TeraBoxApp {
     constructor(ndus) {
         this.cookieString = 'lang=en; ndus=' + ndus;
         this.app_data = { jsToken: '', };
     }
-
+    
     async updateAppData(noJsToken){
         try{
             const url = TERABOX_BASE_URL + '/main';
@@ -27,7 +32,7 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
             });
-
+            
             const data = await req.text();
             this.app_data = JSON.parse(data.match(/<script>var templateData = (.*);<\/script>/)[1]);
             if(!noJsToken){
@@ -45,7 +50,7 @@ class TeraBoxApp {
             console.error('[ERROR] Failed to update jsToken:', error);
         }
     }
-
+    
     async checkLogin(){
         try{
             const url = TERABOX_BASE_URL + '/api/check/login';
@@ -56,11 +61,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
             });
-
+            
             if (!req.ok) {
                 throw new Error(`HTTP error! status: ${req.status}`);
             }
-
+            
             const data = await req.json();
             return data;
         }
@@ -68,7 +73,7 @@ class TeraBoxApp {
             throw new Error('checkLogin', { cause: error });
         }
     }
-
+    
     async getAccountData(){
         try{
             const url = new URL(TERABOX_BASE_URL + '/rest/2.0/membership/proxy/user');
@@ -82,11 +87,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
             });
-
+            
             if (!req.ok) {
                 throw new Error(`HTTP error! status: ${req.status}`);
             }
-
+            
             const data = await req.json();
             return data;
         }
@@ -94,7 +99,7 @@ class TeraBoxApp {
             throw new Error('getAccountData', { cause: error });
         }
     }
-
+    
     async getPassport(){
         try{
             const url = TERABOX_BASE_URL + '/passport/get_info';
@@ -105,11 +110,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
             });
-
+            
             if (!req.ok) {
                 throw new Error(`HTTP error! status: ${req.status}`);
             }
-
+            
             const data = await req.json();
             return data;
         }
@@ -117,7 +122,7 @@ class TeraBoxApp {
             throw new Error('getPassport', { cause: error });
         }
     }
-
+    
     async getQuota(){
         try{
             const url = new URL(TERABOX_BASE_URL + '/api/quota');
@@ -131,21 +136,21 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
             });
-
+            
             if (!req.ok) {
                 throw new Error(`HTTP error! status: ${req.status}`);
             }
-
+            
             const quota = await req.json();
             quota.available = quota.total - quota.used;
-
+            
             return quota;
         }
         catch (error) {
             throw new Error('getQuota', { cause: error });
         }
     }
-
+    
     async getRemoteDir(remoteDir){
         try{
             // alternative api:
@@ -170,13 +175,13 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
             });
-
+            
             if (!req.ok) {
                 throw new Error(`HTTP error! status: ${req.status}`);
             }
-
+            
             const data = await req.json();
-
+            
             return data;
         }
         catch (error) {
@@ -246,10 +251,10 @@ class TeraBoxApp {
             throw new Error('clearRecycleDir', { cause: error });
         }
     }
-
+    
     async getUserInfo(user_id){
         user_id = parseInt(user_id);
-        if(isNaN(user_id)){
+        if(isNaN(user_id) || user_id < 1){
             throw new Error(`getUserInfo: ${user_id} is not user id`);
         }
         try{
@@ -266,11 +271,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
             });
-
+            
             if (!req.ok) {
                 throw new Error(`HTTP error! status: ${req.status}`);
             }
-
+            
             const data = await req.json();
             return data;
         }
@@ -278,10 +283,10 @@ class TeraBoxApp {
             throw new Error('getUserInfo', { cause: error });
         }
     }
-
+    
     async precreateFile(data){
         const formData = new URLSearchParams();
-        formData.append('path', `${data.remote_dir}/${data.file}`);
+        formData.append('path', makeRemoteFPath(data.remote_dir, data.file));
         formData.append('size', data.size);
         formData.append('isdir', 0);
         formData.append('block_list', JSON.stringify(data.hash.chunks));
@@ -291,8 +296,8 @@ class TeraBoxApp {
             formData.append('uploadid', data.upload_id);
         }
         formData.append('content-md5', data.hash.file);
-        formData.append('slice-md5', data.hash.slice); // first 256kb of file
-        formData.append('content-crc', data.hash.crc);
+        formData.append('slice-md5', data.hash.slice);
+        formData.append('content-crc32', data.hash.crc32);
         // formData.append('local_ctime', '');
         // formData.append('local_mtime', '');
         
@@ -330,12 +335,55 @@ class TeraBoxApp {
         }
     }
     
+    async rapidUpload(data){
+        const formData = new URLSearchParams();
+        formData.append('path', makeRemoteFPath(data.remote_dir, data.file));
+        formData.append('target_path', data.remote_dir);
+        formData.append('content-length', data.size);
+        formData.append('content-md5', data.hash.file);
+        formData.append('slice-md5', data.hash.slice);
+        formData.append('content-crc32', data.hash.crc32);
+        formData.append('block_list', JSON.stringify(data.hash.chunks));
+        formData.append('rtype', 2);
+        formData.append('mode', 1);
+        
+        const url = new URL(TERABOX_BASE_URL + '/api/rapidupload');
+        url.search = new URLSearchParams({
+            ...TERABOX_APP_PARAMS,
+            jsToken: this.app_data.jsToken,
+        });
+        
+        const req = await fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'User-Agent': TERABOX_UA,
+                'Cookie': this.cookieString,
+            },
+            duplex: 'half',
+            signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
+        });
+        
+        if (!req.ok) {
+            throw new Error(`HTTP error! status: ${req.status}`);
+        }
+        
+        const rdata = await req.json();
+        
+        if (rdata.errno != 0) {
+            console.log(rdata);
+            throw new Error(`create error: ${rdata.errno}`);
+        }
+        
+        return rdata;
+    }
+    
     async uploadChunk(data, partseq, chunk, onBodySent, externalAbort) {
         externalAbort = externalAbort ? externalAbort : new AbortController().signal;
         
         const formData = new FormData();
         formData.append('file', chunk);
-
+        
         const timeoutAborter = new AbortController;
         let timeoutId = setTimeout(() => {
             timeoutAborter.abort();
@@ -345,7 +393,7 @@ class TeraBoxApp {
             class undiciInterceptorBody extends undici.DecoratorHandler {
                 onBodySent(chunk) {
                     timeoutId.refresh();
-
+                    
                     if (onBodySent){
                         onBodySent(chunk);
                     }
@@ -364,7 +412,7 @@ class TeraBoxApp {
             method: 'upload',
             ...TERABOX_APP_PARAMS,
             // type: 'tmpfile',
-            path: data.remote_dir + '/' + data.file,
+            path: makeRemoteFPath(data.remote_dir, data.file),
             uploadid: data.upload_id,
             partseq: partseq,
         });
@@ -408,7 +456,7 @@ class TeraBoxApp {
     
     async createFolder(remoteDir){
         const formData = new URLSearchParams();
-        formData.append('path', remoteDir + '/');
+        formData.append('path', remoteDir);
         formData.append('isdir', 1);
         formData.append('block_list', '[]');
         
@@ -440,10 +488,10 @@ class TeraBoxApp {
             throw new Error('createFolder', { cause: error });
         }
     }
-
+    
     async createFile(data) {
         const formData = new URLSearchParams();
-        formData.append('path', `${data.remote_dir}/${data.file}`);
+        formData.append('path', makeRemoteFPath(data.remote_dir, data.file));
         formData.append('size', data.size);
         formData.append('isdir', 0);
         formData.append('block_list', JSON.stringify(data.hash.chunks));;
@@ -462,29 +510,29 @@ class TeraBoxApp {
             ...TERABOX_APP_PARAMS,
             jsToken: this.app_data.jsToken,
         });
-
+        
         const req = await fetch(url, {
             method: 'POST',
             body: formData,
             headers: {
                 'User-Agent': TERABOX_UA,
-                    'Cookie': this.cookieString,
+                'Cookie': this.cookieString,
             },
             duplex: 'half',
             signal: AbortSignal.timeout(TERABOX_API_TIMEOUT),
         });
-
+        
         if (!req.ok) {
             throw new Error(`HTTP error! status: ${req.status}`);
         }
-
+        
         const rdata = await req.json();
-
+        
         if (rdata.errno != 0) {
             console.log(rdata);
             throw new Error(`create error: ${rdata.errno}`);
         }
-
+        
         return rdata;
     }
 }
