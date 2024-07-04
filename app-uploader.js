@@ -174,6 +174,22 @@ async function uploadDir(localDir, remoteDir){
         }
         
         
+        try {
+            console.log(`:: Trying RapidUpload file...`);
+            const rapidUploadData = await app.rapidUpload(data);
+            if(rapidUploadData.errno == 0){
+                console.log(`:: Uploaded:`, rapidUploadData.info.path.split('/').at(-1));
+                removeTbTemp(tbtempfile);
+                continue;
+            }
+            else{
+                console.error(':: Failed to RapidUpload file:', rapidUploadData);
+            }
+        }
+        catch(error){
+            console.error(':: Failed to RapidUpload file:', error);
+        }
+        
         let upload_status;
         if(data.size <= getChunkSize(data.size)){
             console.log(`:: Upload file...`);
@@ -194,13 +210,7 @@ async function uploadDir(localDir, remoteDir){
                 
                 if(upload_info.errno == 0){
                     console.log(`:: Uploaded:`, upload_info.name.split('/').at(-1));
-                    // console.log(upload_info);
-                    try{
-                        fs.unlinkSync(tbtempfile);
-                    }
-                    catch(error){
-                        console.error('[ERROR] Can\'t remove temp file:', unwrapErrorMessage(error));
-                    }
+                    removeTbTemp(tbtempfile);
                 }
                 else{
                     console.log(`:: Failed to create file on Remote server:`);
@@ -211,5 +221,14 @@ async function uploadDir(localDir, remoteDir){
                 console.error('[ERROR] Can\'t save file to remote:', unwrapErrorMessage(error));
             }
         }
+    }
+}
+
+function removeTbTemp(tbtempfile){
+    try{
+        fs.unlinkSync(tbtempfile);
+    }
+    catch(error){
+        console.error('[ERROR] Can\'t remove temp file:', unwrapErrorMessage(error));
     }
 }
