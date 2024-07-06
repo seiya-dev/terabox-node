@@ -80,15 +80,15 @@ async function uploadDir(localDir, remoteDir){
             await app.updateAppData();
             const remoteDirData = await app.createFolder(remoteDir);
             if(remoteDirData.errno != 0){
-                const e = new Error('BAD Response');
-                e.data = remoteDirData;
-                throw e;
+                const error = new Error('Bad Response');
+                error.data = remoteDirData;
+                throw error;
             }
         }
     }
-    catch(e){
+    catch(error){
         console.error('[ERROR] Failed to fetch remote dir:', remoteDir);
-        console.error(e);
+        console.error(error);
         return;
     }
     
@@ -132,7 +132,7 @@ async function uploadDir(localDir, remoteDir){
             continue;
         }
         
-        if(data.size > getChunkSize(data.size) * 1024){
+        if(data.size > getChunkSize(data.size, app.is_vip) * 1024){
             console.log(`:: File too big, skipping...`);
             continue;
         }
@@ -167,8 +167,9 @@ async function uploadDir(localDir, remoteDir){
                 }
             }
             else{
-                console.error('[ERROR] Can\'t precreate file:\n', preCreateData);
-                continue;
+                const error = new Error('Bad Response');
+                error.data = remoteDirData;
+                throw error;
             }
         }
         catch(error){
@@ -176,20 +177,22 @@ async function uploadDir(localDir, remoteDir){
             continue;
         }
         
-        try {
-            console.log(`:: Trying RapidUpload file...`);
-            const rapidUploadData = await app.rapidUpload(data);
-            if(rapidUploadData.errno == 0){
-                console.log(`:: Uploaded:`, rapidUploadData.info.path.split('/').at(-1));
-                removeTbTemp(tbtempfile);
-                continue;
+        if(app.is_vip && data.size > getChunkSize(data.size)){
+            try {
+                console.log(`:: Trying RapidUpload file...`);
+                const rapidUploadData = await app.rapidUpload(data);
+                if(rapidUploadData.errno == 0){
+                    console.log(`:: Uploaded:`, rapidUploadData.info.path.split('/').at(-1));
+                    removeTbTemp(tbtempfile);
+                    continue;
+                }
+                else{
+                    console.warn(':: Failed to RapidUpload file:', rapidUploadData);
+                }
             }
-            else{
-                console.error(':: Failed to RapidUpload file:', rapidUploadData);
+            catch(error){
+                console.error(':: Failed to RapidUpload file:', error);
             }
-        }
-        catch(error){
-            console.error(':: Failed to RapidUpload file:', error);
         }
         
         let upload_status;
@@ -213,11 +216,11 @@ async function uploadDir(localDir, remoteDir){
                 if(upload_info.errno == 0){
                     console.log(`:: Uploaded:`, upload_info.name.split('/').at(-1));
                     removeTbTemp(tbtempfile);
+                    continue;
                 }
-                else{
-                    console.log(`:: Failed to create file on Remote server:`);
-                    console.log(upload_info);
-                }
+                const error = new Error('Bad Response');
+                error.data = upload_info;
+                throw error;
             }
             catch(error){
                 console.error('[ERROR] Can\'t save file to remote:', unwrapErrorMessage(error));

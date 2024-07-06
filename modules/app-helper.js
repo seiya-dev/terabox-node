@@ -55,11 +55,10 @@ async function showAccountInfo(app){
     const spaceFree = filesize(acc_quota.available, {standard: 'iec', round: 3, pad: true});
     console.info('[INFO] Space:', spaceFree, '/', spaceTotal, '[FREE / TOTAL]');
     
-    const is_vip = acc_data.data.member_info.is_vip;
     const vip_end_time = acc_data.data.member_info.vip_end_time * 1000;
     const vip_left_time = Math.ceil(acc_data.data.member_info.vip_left_time / (24*60*60));
     
-    if(is_vip == 1){ 
+    if(app.is_vip){
         const vip_end_date = dateFormat(vip_end_time, 'UTC:yyyy-mm-dd');
         console.info('[INFO] VIP: End on', vip_end_date, '/', vip_left_time, 'days left'); 
     }
@@ -136,11 +135,15 @@ async function askRemoteDir(){
     return await input({ message: 'Remote Dir:' });
 }
 
-function getChunkSize(fileSize) {
+function getChunkSize(fileSize, is_vip = true) {
     const MiB = 1024 * 1024;
     const GiB = 1024 * MiB;
     
     const limitSizes = [4, 8, 16, 32, 64, 128];
+    
+    if(!is_vip){
+        return limitSizes.at(0) * MiB;
+    }
     
     for (const limit of limitSizes) {
         if (fileSize <= limit * GiB) {
