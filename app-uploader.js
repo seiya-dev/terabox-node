@@ -11,7 +11,7 @@ import {
     loadJson, saveJson,
     selectAccount, showAccountInfo,
     selectLocalDir, selectRemoteDir,
-    uploadChunks, uploadFile, 
+    scanDir, uploadChunks, uploadFile,
     hashFile, getChunkSize,
     unwrapErrorMessage,
 } from './modules/app-helper.js';
@@ -65,10 +65,7 @@ async function selectDirs(){
 }
 
 async function uploadDir(localDir, remoteDir){
-    const fsList = fs.readdirSync(localDir, {withFileTypes: true})
-        .filter(item => !item.name.match(/^\..*$/) && !item.name.match(/\.tbtemp$/) && !item.name.match(/\.!qB$/))
-        .map(item => { return { is_dir: item.isDirectory(), path: path.resolve(item.path, item.name).replace(/\\+/g, '/'), }})
-        .sort((a, b) => {if(a.is_dir && !b.is_dir){return 1;}if(!a.is_dir && b.is_dir){return -1;}return 0;});
+    const fsList = scanDir(localDir);
     
     let remoteFsList = [];
     try {
@@ -105,7 +102,9 @@ async function uploadDir(localDir, remoteDir){
         }
         
         const filePath = fi.path;
-        const tbtempfile = filePath + '.tbtemp';
+        const isTBHash = filePath.match(/\.tbhash$/) ? true : false;
+        
+        const tbtempfile = isTBHash ? filePath : filePath + '.tbtemp';
         const data = loadJson(tbtempfile);
         delete data.error;
         
@@ -117,8 +116,11 @@ async function uploadDir(localDir, remoteDir){
         }
         if(!data.file || typeof(data.file) != 'string'){
             data.file = path.basename(filePath);
+            if(isTBHash){
+                data.file = data.file.replace(/\.tbhash$/,'');
+            }
         }
-        if(!data.size || isNaN(data.size)){
+        if(!isTBHash && (!data.size || isNaN(data.size))){
             data.size = fs.statSync(filePath).size;
         }
         
@@ -146,9 +148,40 @@ async function uploadDir(localDir, remoteDir){
             continue;
         }
         
-        if(!data.hash){
+        if(!isTBHash && !data.hash){
             console.log(':: Calculating hashes...');
             data.hash = await hashFile(filePath);
+            saveJson(tbtempfile, data);
+        }
+        
+        if((app.is_vip || isTBHash) && data.size > getChunkSize(data.size)){
+            try {
+                console.log(`:: Trying RapidUpload file...`);
+                await app.updateAppData();
+                // do rapid upload...
+                const rapidUploadData = await app.rapidUpload(data);
+                if(rapidUploadData.errno == 0){
+                    console.log(`:: Uploaded:`, rapidUploadData.info.path.split('/').at(-1));
+                    if(!isTBHash){
+                        removeTbTemp(tbtempfile);
+                    }
+                    continue;
+                }
+                else{
+                    console.warn(':: Failed to RapidUpload file:', rapidUploadData);
+                }
+                if(rapidUploadData.errno == 413){
+                    console.warn(':: To use this feature you need accept one of');
+                    console.warn('   referral program at https://www.terabox.com/webmaster');
+                }
+            }
+            catch(error){
+                console.error(':: Failed to RapidUpload file:', error);
+            }
+        }
+        
+        if(isTBHash){
+            continue;
         }
         
         console.log(`:: Precreate file...`);
@@ -175,24 +208,6 @@ async function uploadDir(localDir, remoteDir){
         catch(error){
             console.error('[ERROR] Can\'t precreate file:', error);
             continue;
-        }
-        
-        if(app.is_vip && data.size > getChunkSize(data.size)){
-            try {
-                console.log(`:: Trying RapidUpload file...`);
-                const rapidUploadData = await app.rapidUpload(data);
-                if(rapidUploadData.errno == 0){
-                    console.log(`:: Uploaded:`, rapidUploadData.info.path.split('/').at(-1));
-                    removeTbTemp(tbtempfile);
-                    continue;
-                }
-                else{
-                    console.warn(':: Failed to RapidUpload file:', rapidUploadData);
-                }
-            }
-            catch(error){
-                console.error(':: Failed to RapidUpload file:', error);
-            }
         }
         
         let upload_status;
@@ -234,6 +249,6 @@ function removeTbTemp(tbtempfile){
         fs.unlinkSync(tbtempfile);
     }
     catch(error){
-        console.error('[ERROR] Can\'t remove temp file:', unwrapErrorMessage(error));
+        console.error('[ERROR] Can\'t remove tbtemp/tbhash file:', unwrapErrorMessage(error));
     }
 }

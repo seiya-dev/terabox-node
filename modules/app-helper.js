@@ -131,6 +131,19 @@ function cleanupName(fsName) {
     return fsName;
 }
 
+function scanDir(localDir){
+    try{
+        const fsList = fs.readdirSync(localDir, {withFileTypes: true})
+            .filter(item => !item.name.match(/^\..*$/) && !item.name.match(/\.tbtemp$/) && !item.name.match(/\.!qB$/))
+            .map(item => { return { is_dir: item.isDirectory(), path: path.resolve(item.path, item.name).replace(/\\+/g, '/'), }})
+            .sort((a, b) => {if(a.is_dir && !b.is_dir){return 1;}if(!a.is_dir && b.is_dir){return -1;}return 0;});
+        return fsList;
+    }
+    catch(error){
+        return [];
+    }
+}
+
 async function askRemoteDir(){
     return await input({ message: 'Remote Dir:' });
 }
@@ -484,7 +497,7 @@ export {
     loadJson, saveJson,
     selectAccount, showAccountInfo,
     selectLocalDir, selectRemoteDir,
-    uploadChunks, uploadFile,
+    scanDir, uploadChunks, uploadFile,
     hashFile, getChunkSize,
     unwrapErrorMessage
 };
