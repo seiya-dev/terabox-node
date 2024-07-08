@@ -1,6 +1,6 @@
 {
     "name": "terabox-app-js",
-    "version": "1.5.4",
+    "version": "1.5.5",
     "main": "app.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"

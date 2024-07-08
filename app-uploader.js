@@ -229,7 +229,9 @@ async function uploadDir(localDir, remoteDir){
                 const upload_info = await app.createFile(data);
                 
                 if(upload_info.errno == 0){
-                    console.log(`:: Uploaded:`, upload_info.name.split('/').at(-1));
+                    const remoteFile = upload_info.name.split('/').at(-1);
+                    console.log(`:: Uploaded:`, remoteFile);
+                    remoteFsList.push({ server_filename: remoteFile });
                     removeTbTemp(tbtempfile);
                     continue;
                 }

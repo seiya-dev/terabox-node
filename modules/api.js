@@ -344,6 +344,13 @@ class TeraBoxApp {
         formData.append('rtype', 2);
         formData.append('mode', 1);
         
+        if(!Array.isArray(data.hash.chunks)){
+            // use unsafe rapid upload if we don't have chunks hash
+            // formData.delete('content-crc32');
+            formData.delete('block_list');
+            formData.set('rtype', 3);
+        }
+        
         const url = new URL(TERABOX_BASE_URL + '/api/rapidupload');
         url.search = new URLSearchParams({
             ...TERABOX_APP_PARAMS,
