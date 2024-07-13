@@ -11,20 +11,19 @@ import {
     loadJson, saveJson,
     selectAccount, showAccountInfo,
     selectLocalDir, selectRemoteDir,
-    scanDir, uploadChunks, uploadFile, 
+    scanLocalDir, uploadChunks, uploadFile,
     hashFile, getChunkSize,
     unwrapErrorMessage,
 } from './modules/app-helper.js';
 
 // init app
-let app = {};
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const config = loadJson(path.resolve(__dirname, './.config.json'));
 const meta = loadJson(path.resolve(__dirname, './package.json'));
 
 console.log('[INFO] TeraBox App', 'v' + meta.version, '(Make TBHash Module)');
 
-const yargs = new Argv(config);
+const yargs = new Argv(config, ['l']);
 if(yargs.getArgv('help')){
     yargs.showHelp();
     process.exit();
@@ -42,7 +41,7 @@ async function selectDirs(){
 }
 
 async function makeHashFs(localDir){
-    const fsList = scanDir(localDir);
+    const fsList = scanLocalDir(localDir);
     
     console.log('\n? Local Dir:', localDir);
     const fsListFiles = fsList.filter(item => !item.is_dir);
@@ -75,12 +74,12 @@ async function makeHashFs(localDir){
         
         console.log(`\n:: Processing: [${indexStr}] ${fileName}`);
         
-        if(data.size < 1){
+        if(data.size <= getChunkSize(data.size)){
             console.log(`:: Empty file, skipping...`);
             continue;
         }
         
-        if(data.size > getChunkSize(data.size, app.is_vip) * 1024){
+        if(data.size > getChunkSize(data.size, true) * 1024){
             console.log(`:: File too big, skipping...`);
             continue;
         }

@@ -11,7 +11,7 @@ import {
     loadJson, saveJson,
     selectAccount, showAccountInfo,
     selectLocalDir, selectRemoteDir,
-    scanDir, uploadChunks, uploadFile,
+    scanLocalDir, uploadChunks, uploadFile,
     hashFile, getChunkSize,
     unwrapErrorMessage,
 } from './modules/app-helper.js';
@@ -24,7 +24,7 @@ const meta = loadJson(path.resolve(__dirname, './package.json'));
 
 console.log('[INFO] TeraBox App', 'v' + meta.version, '(Uploader Module)');
 
-const yargs = new Argv(config);
+const yargs = new Argv(config, ['a','l','r']);
 if(yargs.getArgv('help')){
     yargs.showHelp();
     process.exit();
@@ -65,7 +65,7 @@ async function selectDirs(){
 }
 
 async function uploadDir(localDir, remoteDir){
-    const fsList = scanDir(localDir);
+    const fsList = scanLocalDir(localDir);
     
     let remoteFsList = [];
     try {

@@ -75,11 +75,11 @@ async function selectLocalDir(inputDir){
             return path.resolve(answer);
         }
         else{
-            return await selectDir();
+            return await selectLocalDir();
         }
     }
-    catch(e){
-        return await selectDir();
+    catch(error){
+        return await selectLocalDir();
     }
 }
 
@@ -131,7 +131,7 @@ function cleanupName(fsName) {
     return fsName;
 }
 
-function scanDir(localDir){
+function scanLocalDir(localDir){
     try{
         const fsList = fs.readdirSync(localDir, {withFileTypes: true})
             .filter(item => !item.name.match(/^\..*$/) && !item.name.match(/\.tbtemp$/) && !item.name.match(/\.!qB$/))
@@ -179,7 +179,7 @@ const crcTable = (() => {
     return table;
 })();
 
-class createHashCRC {
+class cryptoCreateHashCRC {
     constructor() {
         this.crcHash = -1;
     }
@@ -193,15 +193,20 @@ class createHashCRC {
         if(type == 'hex'){
             return finalCrcHash.toString(16);
         }
+        if(type == 'dec'){
+            return finalCrcHash;
+        }
         return finalCrcHash;
     }
 }
 
-async function hashFile(filePath) {
+async function hashFile(filePath, onlySlice) {
     const stat = fs.statSync(filePath);
+    const sliceSize = 256 * 1024;
     const splitSize = getChunkSize(stat.size);
+    const endStream = onlySlice ? sliceSize : Infinity;
     return new Promise((resolve, reject) => {
-        const fileStream = fs.createReadStream(filePath);
+        const fileStream = fs.createReadStream(filePath, {end: endStream});
         
         const hashData = {
             file: '', 
@@ -210,18 +215,19 @@ async function hashFile(filePath) {
             chunks: []
         };
         
-        const sliceSize = 256 * 1024;
-        
+        // create hash processes
         const fileHash = crypto.createHash('md5');
         const sliceHash = crypto.createHash('md5');
-        const crcHash = new createHashCRC();
+        const crcHash = new cryptoCreateHashCRC();
         let chunkHash = crypto.createHash('md5');
         
         let bytesRead = 0;
         let allBytesRead = 0;
         fileStream.on('data', (data) => {
-            fileHash.update(data);
-            crcHash.update(data);
+            if (!onlySlice) {
+                fileHash.update(data);
+                crcHash.update(data);
+            }
             
             let offset = 0;
             while (offset < data.length) {
@@ -232,7 +238,10 @@ async function hashFile(filePath) {
                 
                 const end = offset + remainingBytes > data.length ? data.length : offset + remainingBytes;
                 const chunk = data.subarray(offset, end);
-                chunkHash.update(chunk);
+                
+                if (!onlySlice) {
+                    chunkHash.update(chunk);
+                }
                 
                 allBytesRead += end - offset;
                 bytesRead += end - offset;
@@ -242,7 +251,7 @@ async function hashFile(filePath) {
                     sliceHash.update(chunk);
                 }
                 
-                if (bytesRead >= splitSize) {
+                if (bytesRead >= splitSize && !onlySlice) {
                     hashData.chunks.push(chunkHash.digest('hex'));
                     chunkHash = crypto.createHash('md5');
                     bytesRead = 0;
@@ -251,11 +260,16 @@ async function hashFile(filePath) {
         });
         
         fileStream.on('end', () => {
-            hashData.file = fileHash.digest('hex');
             hashData.slice = sliceHash.digest('hex');
-            hashData.crc32 = crcHash.digest('dec');
-            if (bytesRead > 0) {
-                hashData.chunks.push(chunkHash.digest('hex'));
+            if (!onlySlice) {
+                hashData.file = fileHash.digest('hex');
+                hashData.crc32 = crcHash.digest('dec');
+                if (bytesRead > 0) {
+                    hashData.chunks.push(chunkHash.digest('hex'));
+                }
+            }
+            else {
+                delete hashData.chunks;
             }
             
             resolve(hashData);
@@ -494,10 +508,16 @@ function unwrapErrorMessage(err) {
 }
 
 export {
-    loadJson, saveJson,
-    selectAccount, showAccountInfo,
-    selectLocalDir, selectRemoteDir,
-    scanDir, uploadChunks, uploadFile,
-    hashFile, getChunkSize,
-    unwrapErrorMessage
+    loadJson,
+    saveJson,
+    selectAccount,
+    showAccountInfo,
+    selectLocalDir,
+    selectRemoteDir,
+    scanLocalDir,
+    getChunkSize,
+    hashFile,
+    uploadChunks,
+    uploadFile,
+    unwrapErrorMessage,
 };

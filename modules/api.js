@@ -63,7 +63,7 @@ class TeraBoxApp {
             });
             
             if (!req.ok) {
-                throw new Error(`HTTP error! status: ${req.status}`);
+                throw new Error(`HTTP error! Status: ${req.status}`);
             }
             
             const rdata = await req.json();
@@ -89,11 +89,11 @@ class TeraBoxApp {
             });
             
             if (!req.ok) {
-                throw new Error(`HTTP error! status: ${req.status}`);
+                throw new Error(`HTTP error! Status: ${req.status}`);
             }
             
             const rdata = await req.json();
-            if(rdata.errno == 0){
+            if(rdata.error_code == 0){
                 this.is_vip = rdata.data.member_info.is_vip > 0 ? true : false;
             }
             return rdata;
@@ -115,7 +115,7 @@ class TeraBoxApp {
             });
             
             if (!req.ok) {
-                throw new Error(`HTTP error! status: ${req.status}`);
+                throw new Error(`HTTP error! Status: ${req.status}`);
             }
             
             const rdata = await req.json();
@@ -141,7 +141,7 @@ class TeraBoxApp {
             });
             
             if (!req.ok) {
-                throw new Error(`HTTP error! status: ${req.status}`);
+                throw new Error(`HTTP error! Status: ${req.status}`);
             }
             
             const rdata = await req.json();
@@ -181,7 +181,7 @@ class TeraBoxApp {
             });
             
             if (!req.ok) {
-                throw new Error(`HTTP error! status: ${req.status}`);
+                throw new Error(`HTTP error! Status: ${req.status}`);
             }
             
             const rdata = await req.json();
@@ -213,7 +213,7 @@ class TeraBoxApp {
             });
             
             if (!req.ok) {
-                throw new Error(`HTTP error! status: ${req.status}`);
+                throw new Error(`HTTP error! Status: ${req.status}`);
             }
             
             const rdata = await req.json();
@@ -242,7 +242,7 @@ class TeraBoxApp {
             });
             
             if (!req.ok) {
-                throw new Error(`HTTP error! status: ${req.status}`);
+                throw new Error(`HTTP error! Status: ${req.status}`);
             }
             
             const rdata = await req.json();
@@ -275,7 +275,7 @@ class TeraBoxApp {
             });
             
             if (!req.ok) {
-                throw new Error(`HTTP error! status: ${req.status}`);
+                throw new Error(`HTTP error! Status: ${req.status}`);
             }
             
             const rdata = await req.json();
@@ -321,7 +321,7 @@ class TeraBoxApp {
             });
             
             if (!req.ok) {
-                throw new Error(`HTTP error! status: ${req.status}`);
+                throw new Error(`HTTP error! Status: ${req.status}`);
             }
             
             const rdata = await req.json();
@@ -358,6 +358,10 @@ class TeraBoxApp {
         });
         
         try{
+            if(data.size < 256 * 1024){
+                throw new Error(`File size too small!`);
+            }
+            
             const req = await fetch(url, {
                 method: 'POST',
                 body: formData,
@@ -370,7 +374,7 @@ class TeraBoxApp {
             });
             
             if (!req.ok) {
-                throw new Error(`HTTP error! status: ${req.status}`);
+                throw new Error(`HTTP error! Status: ${req.status}`);
             }
             
             const rdata = await req.json();
@@ -438,7 +442,7 @@ class TeraBoxApp {
         clearTimeout(timeoutId);
         
         if (!req.ok) {
-            throw new Error(`HTTP error! status: ${req.status}`);
+            throw new Error(`HTTP error! Status: ${req.status}`);
         }
         
         const res = await req.json();
@@ -481,7 +485,7 @@ class TeraBoxApp {
             });
             
             if (!req.ok) {
-                throw new Error(`HTTP error! status: ${req.status}`);
+                throw new Error(`HTTP error! Status: ${req.status}`);
             }
             
             const rdata = await req.json();
@@ -527,7 +531,7 @@ class TeraBoxApp {
             });
             
             if (!req.ok) {
-                throw new Error(`HTTP error! status: ${req.status}`);
+                throw new Error(`HTTP error! Status: ${req.status}`);
             }
             
             const rdata = await req.json();
