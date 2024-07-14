@@ -23,7 +23,7 @@ const meta = loadJson(path.resolve(__dirname, './package.json'));
 
 console.log('[INFO] TeraBox App', 'v' + meta.version, '(Make TBHash Module)');
 
-const yargs = new Argv(config, ['l']);
+const yargs = new Argv(config, ['l','only-slice']);
 if(yargs.getArgv('help')){
     yargs.showHelp();
     process.exit();
@@ -75,7 +75,7 @@ async function makeHashFs(localDir){
         console.log(`\n:: Processing: [${indexStr}] ${fileName}`);
         
         if(data.size <= getChunkSize(data.size)){
-            console.log(`:: Empty file, skipping...`);
+            console.log(`:: File too small, skipping...`);
             continue;
         }
         
@@ -86,7 +86,7 @@ async function makeHashFs(localDir){
         
         if(!data.hash){
             console.log(':: Calculating hashes...');
-            data.hash = await hashFile(filePath);
+            data.hash = await hashFile(filePath, yargs.getArgv('only-slice'));
         }
         
         saveJson(tbtempfile, data);

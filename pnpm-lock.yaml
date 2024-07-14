@@ -9,19 +9,19 @@ importers:
   .:
     dependencies:
       '@inquirer/input':
-        specifier: ^2.1.9
-        version: 2.2.0
+        specifier: ^2.2.1
+        version: 2.2.1
       '@inquirer/select':
-        specifier: ^2.3.5
-        version: 2.3.9
+        specifier: ^2.3.10
+        version: 2.3.10
       dateformat:
         specifier: ^5.0.3
         version: 5.0.3
       filesize:
-        specifier: ^10.1.2
-        version: 10.1.2
+        specifier: ^10.1.4
+        version: 10.1.4
       undici:
-        specifier: ^6.18.2
+        specifier: ^6.19.2
         version: 6.19.2
       yargs:
         specifier: ^17.7.2
@@ -29,20 +29,20 @@ importers:
 
 packages:
 
-  '@inquirer/core@9.0.1':
-    resolution: {integrity: sha512-Kd3uUrkAoADpcocgk3Vk5DN2N6Yid+QlO8ceZWluFiLtVzUBdv/wK1GgZOq30OMDQNOZVTBsbSO3f/E0sOTk8w==}
+  '@inquirer/core@9.0.2':
+    resolution: {integrity: sha512-nguvH3TZar3ACwbytZrraRTzGqyxJfYJwv+ZwqZNatAosdWQMP1GV8zvmkNlBe2JeZSaw0WYBHZk52pDpWC9qA==}
     engines: {node: '>=18'}
 
   '@inquirer/figures@1.0.3':
     resolution: {integrity: sha512-ErXXzENMH5pJt5/ssXV0DfWUZqly8nGzf0UcBV9xTnP+KyffE2mqyxIMBrZ8ijQck2nU0TQm40EQB53YreyWHw==}
     engines: {node: '>=18'}
 
-  '@inquirer/input@2.2.0':
-    resolution: {integrity: sha512-nu+sMP9Nt3uQqEn9u0WWsoTQLWonbtMJWZ6iZ4rSVs4d8cfpGb3hcdljMVRJdE4S/IwhhFU7ucOG1pQebkrULQ==}
+  '@inquirer/input@2.2.1':
+    resolution: {integrity: sha512-Yl1G6h7qWydzrJwqN777geeJVaAFL5Ly83aZlw4xHf8Z/BoTMfKRheyuMaQwOG7LQ4e5nQP7PxXdEg4SzQ+OKw==}
     engines: {node: '>=18'}
 
-  '@inquirer/select@2.3.9':
-    resolution: {integrity: sha512-5kgs8L0Xo62iD047gpxpACxRqwl+iK/NNhvXdkt1qjdADdEd1rszVqzIWHYaigz8sBG+F50wMAREulJFt/Xozw==}
+  '@inquirer/select@2.3.10':
+    resolution: {integrity: sha512-rr7iR0Zj1YFfgM8IUGimPD9Yukd+n/U63CnYT9kdum6DbRXtMxR45rrreP+EA9ixCnShr+W4xj7suRxC1+8t9g==}
     engines: {node: '>=18'}
 
   '@inquirer/type@1.4.0':
@@ -52,8 +52,8 @@ packages:
   '@types/mute-stream@0.0.4':
     resolution: {integrity: sha512-CPM9nzrCPPJHQNA9keH9CVkVI+WR5kMa+7XEs5jcGQ0VoAGnLv242w8lIVgwAEfmE4oufJRaTc9PNLQl0ioAow==}
 
-  '@types/node@20.14.9':
-    resolution: {integrity: sha512-06OCtnTXtWOZBJlRApleWndH4JsRVs1pDCc8dLSQp+7PpUpX3ePdHyeNSFTeSe7FtKyQkrlPvHwJOW3SLd8Oyg==}
+  '@types/node@20.14.10':
+    resolution: {integrity: sha512-MdiXf+nDuMvY0gJKxyfZ7/6UFsETO7mGKF54MVD/ekJS6HdFtpZFBgrh6Pseu64XTb2MLyFPlbW6hj8HYRQNOQ==}
 
   '@types/wrap-ansi@3.0.0':
     resolution: {integrity: sha512-ltIpx+kM7g/MLRZfkbL7EsCEjfzCcScLpkg37eXEtx5kmrAKBkTJwd1GIAjDSL8wTpM6Hzn5YO4pSb91BEwu1g==}
@@ -100,8 +100,8 @@ packages:
     resolution: {integrity: sha512-ErCHMCae19vR8vQGe50xIsVomy19rg6gFu3+r3jkEO46suLMWBksvVyoGgQV+jOfl84ZSOSlmv6Gxa89PmTGmA==}
     engines: {node: '>=6'}
 
-  filesize@10.1.2:
-    resolution: {integrity: sha512-Dx770ai81ohflojxhU+oG+Z2QGvKdYxgEr9OSA8UVrqhwNHjfH9A8f5NKfg83fEH8ZFA5N5llJo5T3PIoZ4CRA==}
+  filesize@10.1.4:
+    resolution: {integrity: sha512-ryBwPIIeErmxgPnm6cbESAzXjuEFubs+yKYLBZvg3CaiNcmkJChoOGcBSrZ6IwkMwPABwPpVXE6IlNdGJJrvEg==}
     engines: {node: '>= 10.4.0'}
 
   get-caller-file@2.0.5:
@@ -169,12 +169,12 @@ packages:
 
 snapshots:
 
-  '@inquirer/core@9.0.1':
+  '@inquirer/core@9.0.2':
     dependencies:
       '@inquirer/figures': 1.0.3
       '@inquirer/type': 1.4.0
       '@types/mute-stream': 0.0.4
-      '@types/node': 20.14.9
+      '@types/node': 20.14.10
       '@types/wrap-ansi': 3.0.0
       ansi-escapes: 4.3.2
       cli-spinners: 2.9.2
@@ -187,14 +187,14 @@ snapshots:
 
   '@inquirer/figures@1.0.3': {}
 
-  '@inquirer/input@2.2.0':
+  '@inquirer/input@2.2.1':
     dependencies:
-      '@inquirer/core': 9.0.1
+      '@inquirer/core': 9.0.2
       '@inquirer/type': 1.4.0
 
-  '@inquirer/select@2.3.9':
+  '@inquirer/select@2.3.10':
     dependencies:
-      '@inquirer/core': 9.0.1
+      '@inquirer/core': 9.0.2
       '@inquirer/figures': 1.0.3
       '@inquirer/type': 1.4.0
       ansi-escapes: 4.3.2
@@ -206,9 +206,9 @@ snapshots:
 
   '@types/mute-stream@0.0.4':
     dependencies:
-      '@types/node': 20.14.9
+      '@types/node': 20.14.10
 
-  '@types/node@20.14.9':
+  '@types/node@20.14.10':
     dependencies:
       undici-types: 5.26.5
 
@@ -246,7 +246,7 @@ snapshots:
 
   escalade@3.1.2: {}
 
-  filesize@10.1.2: {}
+  filesize@10.1.4: {}
 
   get-caller-file@2.0.5: {}
 

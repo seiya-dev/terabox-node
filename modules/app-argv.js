@@ -19,7 +19,7 @@ class Args {
         for(const a of reqArgs){
             switch(a) {
                 case 'a':
-                    yargsOpts['a'] = {
+                    yargsOpts[a] = {
                         alias: ['acc'],
                         describe: 'Use Account ID',
                         choices: Object.keys(config.accounts || []),
@@ -27,17 +27,23 @@ class Args {
                     };
                     break;
                 case 'l':
-                    yargsOpts['l'] = {
+                    yargsOpts[a] = {
                         alias: ['local'],
                         describe: 'Select Local Dir',
                         type: 'string',
                     };
                     break;
                 case 'r':
-                    yargsOpts['r'] = {
+                    yargsOpts[a] = {
                         alias: ['remote'],
                         describe: 'Select Remote Dir',
                         type: 'string',
+                    };
+                    break;
+                case 'only-slice':
+                    yargsOpts[a] = {
+                        describe: 'Generate .tbhash with only slice hash',
+                        type: 'boolean',
                     };
                     break;
             }
