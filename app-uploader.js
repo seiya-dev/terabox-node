@@ -154,7 +154,7 @@ async function uploadDir(localDir, remoteDir){
             saveJson(tbtempfile, data);
         }
         
-        if((app.is_vip || isTBHash) && data.size > getChunkSize(data.size)){
+        if((app.is_vip || isTBHash) && data.size > 256 * 1024){
             try {
                 console.log(`:: Trying RapidUpload file...`);
                 await app.updateAppData();

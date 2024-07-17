@@ -200,18 +200,17 @@ class cryptoCreateHashCRC {
     }
 }
 
-async function hashFile(filePath, onlySlice) {
+async function hashFile(filePath, skipChunks) {
     const stat = fs.statSync(filePath);
     const sliceSize = 256 * 1024;
     const splitSize = getChunkSize(stat.size);
-    const endStream = onlySlice ? sliceSize : Infinity;
     return new Promise((resolve, reject) => {
-        const fileStream = fs.createReadStream(filePath, {end: endStream});
+        const fileStream = fs.createReadStream(filePath);
         
         const hashData = {
-            file: '', 
-            slice: '', 
-            crc32: 0, 
+            slice: '',
+            file: '',
+            crc32: 0,
             chunks: []
         };
         
@@ -224,10 +223,8 @@ async function hashFile(filePath, onlySlice) {
         let bytesRead = 0;
         let allBytesRead = 0;
         fileStream.on('data', (data) => {
-            if (!onlySlice) {
-                fileHash.update(data);
-                crcHash.update(data);
-            }
+            fileHash.update(data);
+            crcHash.update(data);
             
             let offset = 0;
             while (offset < data.length) {
@@ -239,7 +236,7 @@ async function hashFile(filePath, onlySlice) {
                 const end = offset + remainingBytes > data.length ? data.length : offset + remainingBytes;
                 const chunk = data.subarray(offset, end);
                 
-                if (!onlySlice) {
+                if (!skipChunks) {
                     chunkHash.update(chunk);
                 }
                 
@@ -247,31 +244,39 @@ async function hashFile(filePath, onlySlice) {
                 bytesRead += end - offset;
                 offset = end;
                 
-                if (allBytesRead <= sliceSize) {
+                if (!skipChunks && allBytesRead <= sliceSize) {
                     sliceHash.update(chunk);
                 }
                 
-                if (bytesRead >= splitSize && !onlySlice) {
+                if (!skipChunks && bytesRead >= splitSize) {
                     hashData.chunks.push(chunkHash.digest('hex'));
                     chunkHash = crypto.createHash('md5');
                     bytesRead = 0;
                 }
             }
+            
+            const totalSizeStr = filesize(stat.size, {standard: 'iec', round: 3, pad: true});
+            const readedBytesStr = filesize(allBytesRead, {standard: 'iec', round: 3, pad: true});
+            const currentReadStr = `(${readedBytesStr}/${totalSizeStr})`;
+            const percentage = Math.round((allBytesRead / stat.size) * 100);
+            
+            readline.clearLine(process.stdout, 0);
+            readline.cursorTo(process.stdout, 0, null);
+            process.stdout.write(`:: Hashing: ${percentage}% ${currentReadStr}`);
         });
         
         fileStream.on('end', () => {
             hashData.slice = sliceHash.digest('hex');
-            if (!onlySlice) {
-                hashData.file = fileHash.digest('hex');
-                hashData.crc32 = crcHash.digest('dec');
-                if (bytesRead > 0) {
-                    hashData.chunks.push(chunkHash.digest('hex'));
-                }
+            hashData.file = fileHash.digest('hex');
+            hashData.crc32 = crcHash.digest('dec');
+            if (!skipChunks && bytesRead > 0) {
+                hashData.chunks.push(chunkHash.digest('hex'));
             }
-            else {
+            if (skipChunks) {
                 delete hashData.chunks;
             }
             
+            console.log();
             resolve(hashData);
         });
         

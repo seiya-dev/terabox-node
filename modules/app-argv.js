@@ -40,9 +40,9 @@ class Args {
                         type: 'string',
                     };
                     break;
-                case 'only-slice':
+                case 'skip-chunks':
                     yargsOpts[a] = {
-                        describe: 'Generate .tbhash with only slice hash',
+                        describe: 'Generate .tbhash without chunks hash',
                         type: 'boolean',
                     };
                     break;
