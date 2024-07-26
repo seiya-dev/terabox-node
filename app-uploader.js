@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 
 import Argv from './modules/app-argv.js';
 import TeraBoxApp from './modules/api.js';
+import { filesize } from 'filesize';
 
 import {
     loadJson, saveJson,
@@ -126,15 +127,16 @@ async function uploadDir(localDir, remoteDir){
         
         const index = fsListFiles.indexOf(fi) + 1;
         const indexStr = `${index}/${fsListFiles.length}`;
+        const filesizeStr = filesize(parseInt(data.size), {standard: 'iec', round: 3, pad: true});
         
-        console.log(`\n:: Processing: [${indexStr}] ${data.file}`);
+        console.log(`\n:: Processing: [${indexStr}] ${data.file} (${filesizeStr})`);
         
         if(data.size < 1){
             console.log(`:: Empty file, skipping...`);
             continue;
         }
         
-        if(data.size > getChunkSize(data.size, app.is_vip) * 1024){
+        if(data.size > getChunkSize(data.size, app.params.is_vip) * 1024){
             console.log(`:: File too big, skipping...`);
             continue;
         }
@@ -143,8 +145,18 @@ async function uploadDir(localDir, remoteDir){
             return f.server_filename == data.file;
         });
         
+        const dontComparedRemote = remoteFsList.find(f => {
+            return f.server_filename == data.file && f.size != data.size;
+        });
+        
+        
         if(findRemote){
             console.log(`:: On Remote server Folder or File exist with same name, skipping...`);
+            if(dontComparedRemote){
+                const localFileSize = filesize(data.size, {standard: 'iec', round: 3, pad: true});
+                const remoteFileSize = filesize(dontComparedRemote.size, {standard: 'iec', round: 3, pad: true});
+                console.warn(':: But file size not match: LOCAL/REMOTE', localFileSize, '/', remoteFileSize);
+            }
             continue;
         }
         
@@ -154,14 +166,17 @@ async function uploadDir(localDir, remoteDir){
             saveJson(tbtempfile, data);
         }
         
-        if((app.is_vip || isTBHash) && data.size > 256 * 1024){
+        if(data.size > 256 * 1024){
             try {
                 console.log(`:: Trying RapidUpload file...`);
                 await app.updateAppData();
                 // do rapid upload...
                 const rapidUploadData = await app.rapidUpload(data);
                 if(rapidUploadData.errno == 0){
-                    console.log(`:: Uploaded:`, rapidUploadData.info.path.split('/').at(-1));
+                    const remoteFile = rapidUploadData.info.path.split('/').at(-1);
+                    const remoteFileSize = filesize(parseInt(rapidUploadData.info.size), {standard: 'iec', round: 3, pad: true});
+                    console.log(`:: Uploaded:`, remoteFile, `(${remoteFileSize})`);
+                    remoteFsList.push({ server_filename: remoteFile });
                     if(!isTBHash){
                         removeTbTemp(tbtempfile);
                     }
@@ -230,8 +245,13 @@ async function uploadDir(localDir, remoteDir){
                 
                 if(upload_info.errno == 0){
                     const remoteFile = upload_info.name.split('/').at(-1);
-                    console.log(`:: Uploaded:`, remoteFile);
+                    const remoteFileSize = filesize(parseInt(upload_info.size), {standard: 'iec', round: 3, pad: true});
+                    console.log(`:: Uploaded:`, remoteFile, `(${remoteFileSize})`);
                     remoteFsList.push({ server_filename: remoteFile });
+                    if(data.size != parseInt(upload_info.size)){
+                        console.error(':: ERROR: File sizes not match!');
+                        continue;
+                    }
                     removeTbTemp(tbtempfile);
                     continue;
                 }
@@ -251,6 +271,6 @@ function removeTbTemp(tbtempfile){
         fs.unlinkSync(tbtempfile);
     }
     catch(error){
-        console.error('[ERROR] Can\'t remove tbtemp/tbhash file:', unwrapErrorMessage(error));
+        console.error('[ERROR] Can\'t remove tbtemp file:', unwrapErrorMessage(error));
     }
 }

@@ -56,9 +56,9 @@ async function showAccountInfo(app){
     console.info('[INFO] Space:', spaceFree, '/', spaceTotal, '[FREE / TOTAL]');
     
     const vip_end_time = acc_data.data.member_info.vip_end_time * 1000;
-    const vip_left_time = Math.ceil(acc_data.data.member_info.vip_left_time / (24*60*60));
+    const vip_left_time = Math.floor(acc_data.data.member_info.vip_left_time / (24*60*60));
     
-    if(app.is_vip){
+    if(app.params.is_vip){
         const vip_end_date = dateFormat(vip_end_time, 'UTC:yyyy-mm-dd');
         console.info('[INFO] VIP: End on', vip_end_date, '/', vip_left_time, 'days left'); 
     }
@@ -133,8 +133,9 @@ function cleanupName(fsName) {
 
 function scanLocalDir(localDir){
     try{
+        const blackListRegex = /(^\..*|\.!qB|\.part|\.tbtemp|\.temp)$/;
         const fsList = fs.readdirSync(localDir, {withFileTypes: true})
-            .filter(item => !item.name.match(/^\..*$/) && !item.name.match(/\.tbtemp$/) && !item.name.match(/\.!qB$/))
+            .filter(item => !item.name.match(blackListRegex))
             .map(item => { return { is_dir: item.isDirectory(), path: path.resolve(item.path, item.name).replace(/\\+/g, '/'), }})
             .sort((a, b) => {if(a.is_dir && !b.is_dir){return 1;}if(!a.is_dir && b.is_dir){return -1;}return 0;});
         return fsList;
@@ -208,16 +209,16 @@ async function hashFile(filePath, skipChunks) {
         const fileStream = fs.createReadStream(filePath);
         
         const hashData = {
+            crc32: 0,
             slice: '',
             file: '',
-            crc32: 0,
             chunks: []
         };
         
         // create hash processes
-        const fileHash = crypto.createHash('md5');
-        const sliceHash = crypto.createHash('md5');
         const crcHash = new cryptoCreateHashCRC();
+        const sliceHash = crypto.createHash('md5');
+        const fileHash = crypto.createHash('md5');
         let chunkHash = crypto.createHash('md5');
         
         let bytesRead = 0;
@@ -266,9 +267,10 @@ async function hashFile(filePath, skipChunks) {
         });
         
         fileStream.on('end', () => {
+            hashData.crc32 = crcHash.digest('dec');
             hashData.slice = sliceHash.digest('hex');
             hashData.file = fileHash.digest('hex');
-            hashData.crc32 = crcHash.digest('dec');
+            
             if (!skipChunks && bytesRead > 0) {
                 hashData.chunks.push(chunkHash.digest('hex'));
             }
@@ -280,7 +282,10 @@ async function hashFile(filePath, skipChunks) {
             resolve(hashData);
         });
         
-        fileStream.on('error', reject);
+        fileStream.on('error', (error) => {
+            console.log();
+            reject(error);
+        });
     });
 }
 
