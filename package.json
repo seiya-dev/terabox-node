@@ -1,17 +1,17 @@
 {
-    "name": "terabox-app-js",
-    "name_ext": "Terabox App",
+    "name": "terabox-node",
+    "name_ext": "TeraBox Node",
     "version": "2.0.0",
     "main": "app.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
     "keywords": [
-        "terabox"
+        "terabox",
+        "crawler",
+        "api",
+        "node"
     ],
     "author": "Seiya Dev.",
     "license": "MIT",
-    "description": "",
+    "description": "A nodejs tool to interact with terabox cloud account ☁️",
     "type": "module",
     "dependencies": {
         "@inquirer/input": "^2.3.0",
