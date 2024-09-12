@@ -41,11 +41,11 @@ We are working to improve some features of this tool.
 
 |        **Features**        | **Workon** |                          **State**                         |
 |:--------------------------:|:----------:|:----------------------------------------------------------:|
-| Package Manager Compatible |    Soon    |                  Will work on future soon                  |
+| Package Manager Compatible |    Soon    |                  Will work in future soon                  |
 |       User Interface       |     On     | - improving user interface using chalk and other packages. |
-|   Stable Download Feature  |    Soon    |                  Will work on future soon                  |
-|      Folder Structure      |    Soon    |                  Will work on future soon                  |
-|          Stablity          |    Soon    |                  Will work on future soon                  |
+|   Stable Download Feature  |    Soon    |                  Will work in future soon                  |
+|      Folder Structure      |    Soon    |                  Will work in future soon                  |
+|          Stablity          |    Soon    |                  Will work in future soon                  |
 
 ## Authors
 - [@seiya-dev](https://github.com/seiya-dev/terabox-app-js) as Creator
