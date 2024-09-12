@@ -5,14 +5,15 @@ import path from 'node:path';
 import { fileURLToPath } from 'url';
 
 import Argv from './modules/app-argv.js';
+import { request } from 'undici';
 import TeraBoxApp from './modules/api.js';
 import { filesize } from 'filesize';
 
 import {
-    loadJson, saveJson,
+    loadYaml, saveYaml,
     selectAccount, showAccountInfo,
-    selectLocalDir, selectRemoteDir,
-    scanLocalDir, uploadChunks, uploadFile,
+    selectLocalPath, selectRemotePath,
+    scanLocalPath, uploadChunks,
     hashFile, getChunkSize,
     unwrapErrorMessage,
 } from './modules/app-helper.js';
@@ -20,12 +21,12 @@ import {
 // init app
 let app = {};
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const config = loadJson(path.resolve(__dirname, './.config.json'));
-const meta = loadJson(path.resolve(__dirname, './package.json'));
+const config = loadYaml(path.resolve(__dirname, './.config.yaml'));
+const meta = loadYaml(path.resolve(__dirname, './package.json'));
 
 console.log('[INFO] TeraBox App', 'v' + meta.version, '(Uploader Module)');
 
-const yargs = new Argv(config, ['a','l','r']);
+const yargs = new Argv(config, ['a','l','r','no-rapidupload']);
 if(yargs.getArgv('help')){
     yargs.showHelp();
     process.exit();
@@ -58,15 +59,15 @@ if(yargs.getArgv('help')){
 })();
 
 async function selectDirs(){
-    const localDir = await selectLocalDir(yargs.getArgv('l'));
-    const remoteDir = await selectRemoteDir(yargs.getArgv('r'));
+    const localDir = await selectLocalPath(yargs.getArgv('l'));
+    const remoteDir = await selectRemotePath(yargs.getArgv('r'));
     
     await uploadDir(localDir, remoteDir);
     console.log('\n:: Done!\n');
 }
 
 async function uploadDir(localDir, remoteDir){
-    const fsList = scanLocalDir(localDir);
+    const fsList = scanLocalPath(localDir);
     
     let remoteFsList = [];
     try {
@@ -76,22 +77,20 @@ async function uploadDir(localDir, remoteDir){
         }
         else{
             await app.updateAppData();
-            const remoteDirData = await app.createFolder(remoteDir);
+            const remoteDirData = await app.createDir(remoteDir);
             if(remoteDirData.errno != 0){
-                const error = new Error('Bad Response');
-                error.data = remoteDirData;
-                throw error;
+                throw new Error('Bad Response', { cause: remoteDirData });
             }
         }
     }
     catch(error){
         console.error('[ERROR] Failed to fetch remote dir:', remoteDir);
-        console.error(error);
+        console.error(unwrapErrorMessage(error));
         return;
     }
     
-    console.log('\n? Local Dir:', localDir);
-    console.log('? Remote Dir:', remoteDir);
+    console.log('\n? Local Path:', localDir);
+    console.log('? Remote Path:', remoteDir);
     const fsListFiles = fsList.filter(item => !item.is_dir);
     
     for(const fi of fsList){
@@ -106,7 +105,7 @@ async function uploadDir(localDir, remoteDir){
         const isTBHash = filePath.match(/\.tbhash$/) ? true : false;
         
         const tbtempfile = isTBHash ? filePath : filePath + '.tbtemp';
-        const data = loadJson(tbtempfile);
+        const data = loadYaml(tbtempfile);
         delete data.error;
         
         if(!data.upload_id || typeof(data.upload_id) != 'string'){
@@ -149,7 +148,6 @@ async function uploadDir(localDir, remoteDir){
             return f.server_filename == data.file && f.size != data.size;
         });
         
-        
         if(findRemote){
             console.log(`:: On Remote server Folder or File exist with same name, skipping...`);
             if(dontComparedRemote){
@@ -163,10 +161,10 @@ async function uploadDir(localDir, remoteDir){
         if(!isTBHash && !data.hash){
             console.log(':: Calculating hashes...');
             data.hash = await hashFile(filePath);
-            saveJson(tbtempfile, data);
+            saveYaml(tbtempfile, data);
         }
         
-        if(data.size > 256 * 1024){
+        if(!yargs.getArgv('no-rapidupload') && data.size > 256 * 1024){
             try {
                 console.log(`:: Trying RapidUpload file...`);
                 await app.updateAppData();
@@ -176,7 +174,7 @@ async function uploadDir(localDir, remoteDir){
                     const remoteFile = rapidUploadData.info.path.split('/').at(-1);
                     const remoteFileSize = filesize(parseInt(rapidUploadData.info.size), {standard: 'iec', round: 3, pad: true});
                     console.log(`:: Uploaded:`, remoteFile, `(${remoteFileSize})`);
-                    remoteFsList.push({ server_filename: remoteFile });
+                    remoteFsList.push({ server_filename: remoteFile, size: data.size });
                     if(!isTBHash){
                         removeTbTemp(tbtempfile);
                     }
@@ -191,7 +189,7 @@ async function uploadDir(localDir, remoteDir){
                 }
             }
             catch(error){
-                console.error(':: Failed to RapidUpload file:', error);
+                console.error(':: Failed to RapidUpload file:', unwrapErrorMessage(error));
             }
         }
         
@@ -207,7 +205,7 @@ async function uploadDir(localDir, remoteDir){
             if(preCreateData.errno == 0){
                 // save new upload id
                 data.upload_id = preCreateData.uploadid;
-                saveJson(tbtempfile, data);
+                saveYaml(tbtempfile, data);
                 // fill uploaded data temporary
                 data.uploaded = new Array(data.hash.chunks.length).fill(true);
                 for(const uBlock of preCreateData.block_list){
@@ -215,26 +213,24 @@ async function uploadDir(localDir, remoteDir){
                 }
             }
             else{
-                const error = new Error('Bad Response');
-                error.data = remoteDirData;
-                throw error;
+                throw new Error('Bad Response', { cause: preCreateData });
             }
         }
         catch(error){
-            console.error('[ERROR] Can\'t precreate file:', error);
+            console.error('[ERROR] Can\'t precreate file:', unwrapErrorMessage(error));
             continue;
         }
         
-        let upload_status;
+        
         if(data.size <= getChunkSize(data.size)){
             console.log(`:: Upload file...`);
-            upload_status = await uploadFile(app, data, filePath);
         }
         else{
             console.log(`:: Upload chunks...`);
-            upload_status = await uploadChunks(app, data, filePath);
         }
-        console.log(); // reset stdout after process.write
+        
+        let upload_status;
+        upload_status = await uploadChunks(app, data, filePath);
         delete data.uploaded;
         
         if(upload_status){
@@ -244,20 +240,28 @@ async function uploadDir(localDir, remoteDir){
                 const upload_info = await app.createFile(data);
                 
                 if(upload_info.errno == 0){
-                    const remoteFile = upload_info.name.split('/').at(-1);
-                    const remoteFileSize = filesize(parseInt(upload_info.size), {standard: 'iec', round: 3, pad: true});
-                    console.log(`:: Uploaded:`, remoteFile, `(${remoteFileSize})`);
-                    remoteFsList.push({ server_filename: remoteFile });
-                    if(data.size != parseInt(upload_info.size)){
-                        console.error(':: ERROR: File sizes not match!');
+                    const remoteFile = upload_info.path.split('/').at(-1);
+                    const finalSize = filesize(data.size, {standard: 'iec', round: 3, pad: true});
+                    
+                    console.log(`:: Uploaded:`, remoteFile, `(${finalSize})`);
+                    remoteFsList.push({ server_filename: remoteFile, size: data.size });
+                    
+                    console.log(':: Checking created file...');
+                    const rmeta = await app.getFileMeta([upload_info.path]);
+                    
+                    const fsizeMatchMsg = data.size == rmeta.info[0].size ? 'MATCH' : 'MISMATCH';
+                    const logFSize = data.size == rmeta.info[0].size ? console.log : console.error;
+                    logFSize(':: SIZE:', rmeta.info[0].size, `(${fsizeMatchMsg})`);
+                    
+                    if(data.size != rmeta.info[0].size){
                         continue;
                     }
+                    
+                    console.log(':: File is OK!');
                     removeTbTemp(tbtempfile);
                     continue;
                 }
-                const error = new Error('Bad Response');
-                error.data = upload_info;
-                throw error;
+                throw new Error('Bad Response', { cause: upload_info });
             }
             catch(error){
                 console.error('[ERROR] Can\'t save file to remote:', unwrapErrorMessage(error));

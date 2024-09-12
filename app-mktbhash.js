@@ -8,18 +8,18 @@ import Argv from './modules/app-argv.js';
 import TeraBoxApp from './modules/api.js';
 
 import {
-    loadJson, saveJson,
+    loadYaml, saveYaml,
     selectAccount, showAccountInfo,
-    selectLocalDir, selectRemoteDir,
-    scanLocalDir, uploadChunks, uploadFile,
+    selectLocalPath, selectRemotePath,
+    scanLocalPath, uploadChunks, uploadFile,
     hashFile, getChunkSize,
     unwrapErrorMessage,
 } from './modules/app-helper.js';
 
 // init app
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const config = loadJson(path.resolve(__dirname, './.config.json'));
-const meta = loadJson(path.resolve(__dirname, './package.json'));
+const config = loadYaml(path.resolve(__dirname, './.config.yaml'));
+const meta = loadYaml(path.resolve(__dirname, './package.json'));
 
 console.log('[INFO] TeraBox App', 'v' + meta.version, '(Make TBHash Module)');
 
@@ -34,16 +34,16 @@ if(yargs.getArgv('help')){
 })();
 
 async function selectDirs(){
-    const localDir = await selectLocalDir(yargs.getArgv('l'));
+    const localDir = await selectLocalPath(yargs.getArgv('l'));
     
     await makeHashFs(localDir);
     console.log('\n:: Done!\n');
 }
 
 async function makeHashFs(localDir){
-    const fsList = scanLocalDir(localDir);
+    const fsList = scanLocalPath(localDir).filter(item => !item.path.match(/\.tbhash$/));
     
-    console.log('\n? Local Dir:', localDir);
+    console.log('\n? Local Path:', localDir);
     const fsListFiles = fsList.filter(item => !item.is_dir);
     
     for(const fi of fsList){
@@ -55,14 +55,9 @@ async function makeHashFs(localDir){
         
         const filePath = fi.path;
         const fileName = path.basename(filePath);
-        const isTBHash = filePath.match(/\.tbhash$/) ? true : false;
-        
-        if(isTBHash){
-            continue;
-        }
         
         const tbtempfile = filePath + '.tbhash';
-        const data = loadJson(tbtempfile);
+        const data = loadYaml(tbtempfile);
         delete data.error;
         
         if(!data.size || isNaN(data.size)){
@@ -89,7 +84,7 @@ async function makeHashFs(localDir){
             data.hash = await hashFile(filePath, yargs.getArgv('skip-chunks'));
         }
         
-        saveJson(tbtempfile, data);
+        saveYaml(tbtempfile, data);
         console.log(':: TBHash File:', path.basename(tbtempfile));
     }
 }

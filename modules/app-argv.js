@@ -9,6 +9,7 @@ class Args {
         this.yargs.parserConfiguration({
             'duplicate-arguments-array': false,
             'camel-case-expansion': false,
+            'boolean-negation': false,
         });
         // set help defaults
         this.yargs.wrap(Math.min(120));
@@ -29,15 +30,21 @@ class Args {
                 case 'l':
                     yargsOpts[a] = {
                         alias: ['local'],
-                        describe: 'Select Local Dir',
+                        describe: 'Select Local Path',
                         type: 'string',
                     };
                     break;
                 case 'r':
                     yargsOpts[a] = {
                         alias: ['remote'],
-                        describe: 'Select Remote Dir',
+                        describe: 'Select Remote Path',
                         type: 'string',
+                    };
+                    break;
+                case 'no-rapidupload':
+                    yargsOpts[a] = {
+                        describe: 'Skip Rapid Upload',
+                        type: 'boolean',
                     };
                     break;
                 case 'skip-chunks':

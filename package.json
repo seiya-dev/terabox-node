@@ -1,6 +1,7 @@
 {
     "name": "terabox-app-js",
-    "version": "1.7.0",
+    "name_ext": "Terabox App",
+    "version": "2.0.0",
     "main": "app.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
@@ -13,11 +14,12 @@
     "description": "",
     "type": "module",
     "dependencies": {
-        "@inquirer/input": "^2.2.1",
-        "@inquirer/select": "^2.3.10",
+        "@inquirer/input": "^2.3.0",
+        "@inquirer/select": "^2.5.0",
         "dateformat": "^5.0.3",
-        "filesize": "^10.1.4",
-        "undici": "^6.19.2",
+        "filesize": "^10.1.6",
+        "undici": "^6.19.8",
+        "yaml": "^2.5.1",
         "yargs": "^17.7.2"
     }
 }

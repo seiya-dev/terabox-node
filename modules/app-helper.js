@@ -1,5 +1,4 @@
 import fs from 'node:fs';
-import fsPromises from 'node:fs/promises';
 
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -9,22 +8,23 @@ import input from '@inquirer/input';
 import select from '@inquirer/select';
 import dateFormat from 'dateformat';
 import { filesize } from 'filesize';
+import YAML from 'yaml';
 
 const maxTasks = 10;
 const maxTries = 5;
 
-function loadJson(file){
+function loadYaml(file){
     try{
-        const data = fs.readFileSync(file);
-        return JSON.parse(data);
+        const data = fs.readFileSync(file, 'utf8');
+        return YAML.parse(data);
     }
     catch(e){
         return { error: e };
     }
 }
 
-function saveJson(file, data){
-    fs.writeFileSync(file, JSON.stringify(data));
+function saveYaml(file, data){
+    fs.writeFileSync(file, YAML.stringify(data, {lineWidth: 0}));
 }
 
 async function selectAccount(config){
@@ -64,10 +64,10 @@ async function showAccountInfo(app){
     }
 }
 
-async function selectLocalDir(inputDir){
-    let answer = inputDir;
+async function selectLocalPath(inputPath){
+    let answer = inputPath;
     if(typeof answer != 'string' || answer == ''){
-        answer = await input({ message: 'Local Dir:' });
+        answer = await input({ message: 'Local Path:' });
     }
     answer = answer.replace(/^"(.*)"$/, '$1');
     try{
@@ -75,40 +75,40 @@ async function selectLocalDir(inputDir){
             return path.resolve(answer);
         }
         else{
-            return await selectLocalDir();
+            return await selectLocalPath();
         }
     }
     catch(error){
-        return await selectLocalDir();
+        return await selectLocalPath();
     }
 }
 
-async function selectRemoteDir(remoteDir){
+async function selectRemotePath(remotePath){
     try{
-        remoteDir = await cleanupRemotePath(remoteDir);
-        return remoteDir;
+        remotePath = await cleanupRemotePath(remotePath);
+        return remotePath;
     }
     catch(e){
-        return selectRemoteDir(remoteDir);
+        return selectRemotePath(remotePath);
     }
 }
 
-async function cleanupRemotePath(remoteDir){
-    if(typeof remoteDir != 'string' || remoteDir == ''){
-        remoteDir = await input({ message: 'Remote Dir:' });
-        if(remoteDir == ''){
-            return await cleanupRemotePath(remoteDir);
+async function cleanupRemotePath(remotePath){
+    if(typeof remotePath != 'string' || remotePath == ''){
+        remotePath = await input({ message: 'Remote Path:' });
+        if(remotePath == ''){
+            return await cleanupRemotePath(remotePath);
         }
     }
-    if(remoteDir.match(/^root/)){
-        remoteDir = remoteDir.replace(/^root/, '');
+    if(remotePath.match(/^root/)){
+        remotePath = remotePath.replace(/^root/, '');
     }
-    remoteDir = '/' + remoteDir.split('/').map(v => cleanupName(v)).join('/');
-    remoteDir = remoteDir.replace(/\/+/g, '/');
-    if(remoteDir != '/' && remoteDir.match(/\/$/)){
-        remoteDir = remoteDir.replace(/\/$/, '');
+    remotePath = '/' + remotePath.split('/').map(v => cleanupName(v)).join('/');
+    remotePath = remotePath.replace(/\/+/g, '/');
+    if(remotePath != '/' && remotePath.match(/\/$/)){
+        remotePath = remotePath.replace(/\/$/, '');
     }
-    return remoteDir;
+    return remotePath;
 }
 
 function cleanupName(fsName) {
@@ -131,10 +131,10 @@ function cleanupName(fsName) {
     return fsName;
 }
 
-function scanLocalDir(localDir){
+function scanLocalPath(localPath){
     try{
-        const blackListRegex = /(^\..*|\.!qB|\.part|\.tbtemp|\.temp)$/;
-        const fsList = fs.readdirSync(localDir, {withFileTypes: true})
+        const blackListRegex = /(^\..*|\.!qB|\.part|\.tbtemp|\.temp|\.downloading)$/;
+        const fsList = fs.readdirSync(localPath, {withFileTypes: true})
             .filter(item => !item.name.match(blackListRegex))
             .map(item => { return { is_dir: item.isDirectory(), path: path.resolve(item.path, item.name).replace(/\\+/g, '/'), }})
             .sort((a, b) => {if(a.is_dir && !b.is_dir){return 1;}if(!a.is_dir && b.is_dir){return -1;}return 0;});
@@ -143,10 +143,6 @@ function scanLocalDir(localDir){
     catch(error){
         return [];
     }
-}
-
-async function askRemoteDir(){
-    return await input({ message: 'Remote Dir:' });
 }
 
 function getChunkSize(fileSize, is_vip = true) {
@@ -192,7 +188,7 @@ class cryptoCreateHashCRC {
     digest(type){
         const finalCrcHash = (this.crcHash ^ (-1)) >>> 0;
         if(type == 'hex'){
-            return finalCrcHash.toString(16);
+            return finalCrcHash.toString(16).toUpperCase().padStart(8, '0');
         }
         if(type == 'dec'){
             return finalCrcHash;
@@ -205,6 +201,7 @@ async function hashFile(filePath, skipChunks) {
     const stat = fs.statSync(filePath);
     const sliceSize = 256 * 1024;
     const splitSize = getChunkSize(stat.size);
+    const hashedData = newProgressData();
     return new Promise((resolve, reject) => {
         const fileStream = fs.createReadStream(filePath);
         
@@ -256,14 +253,8 @@ async function hashFile(filePath, skipChunks) {
                 }
             }
             
-            const totalSizeStr = filesize(stat.size, {standard: 'iec', round: 3, pad: true});
-            const readedBytesStr = filesize(allBytesRead, {standard: 'iec', round: 3, pad: true});
-            const currentReadStr = `(${readedBytesStr}/${totalSizeStr})`;
-            const percentage = Math.round((allBytesRead / stat.size) * 100);
-            
-            readline.clearLine(process.stdout, 0);
-            readline.cursorTo(process.stdout, 0, null);
-            process.stdout.write(`:: Hashing: ${percentage}% ${currentReadStr}`);
+            hashedData.all = hashedData.parts[0] = allBytesRead;
+            printProgressLog('Hashing', hashedData, stat.size);
         });
         
         fileStream.on('end', () => {
@@ -313,17 +304,16 @@ async function runWithConcurrencyLimit(tasks, limit) {
     }
 };
 
-function printUploadLog(uploadedData, fsize){
-    readline.clearLine(process.stdout, 0);
+function printProgressLog(prepText, uploadedData, fsize){
     readline.cursorTo(process.stdout, 0, null);
     
     const uploadedBytesSum = Object.values(uploadedData.parts).reduce((acc, value) => acc + value, 0);
-    const uploadedBytesStr = filesize(uploadedBytesSum, {standard: 'iec', round: 3, pad: true});
+    const uploadedBytesStr = filesize(uploadedBytesSum, {standard: 'iec', round: 3, pad: true, separator: '.'});
     const filesizeBytesStr = filesize(fsize, {standard: 'iec', round: 3, pad: true});
     const uploadedBytesFStr = `(${uploadedBytesStr}/${filesizeBytesStr})`;
     
     const uploadSpeed = uploadedData.all * 1000 / (Date.now() - uploadedData.start);
-    const uploadSpeedStr = filesize(uploadSpeed, {standard: 'si', round: 2, pad: true}) + '/s';
+    const uploadSpeedStr = filesize(uploadSpeed, {standard: 'si', round: 2, pad: true, separator: '.'}) + '/s';
     
     const remainingTime = Math.max((fsize - uploadedBytesSum) / uploadSpeed, 0);
     const remainingSeconds = Math.floor(remainingTime % 60);
@@ -332,10 +322,11 @@ function printUploadLog(uploadedData, fsize){
     const [remH, remM, remS] = [remainingHours, remainingMinutes, remainingSeconds].map(t => String(t).padStart(2, '0'));
     const remainingTimeStr = `${remH}h${remM}m${remS}s left...`;
     
-    const percentage = Math.round((uploadedBytesSum / fsize) * 100);
+    const percentage = Math.floor((uploadedBytesSum / fsize) * 100);
     const percentageFStr = `${percentage}% ${uploadedBytesFStr}`;
     const uploadStatusArr = [percentageFStr, uploadSpeedStr, remainingTimeStr];
-    process.stdout.write(`Uploading: ${uploadStatusArr.join(', ')}`);
+    process.stdout.write(`${prepText}: ${uploadStatusArr.join(', ')}`);
+    readline.clearLine(process.stdout, 1);
 }
 
 async function uploadChunkTask(app, data, filePath, partSeq, uploadedData, externalAbort) {
@@ -343,14 +334,14 @@ async function uploadChunkTask(app, data, filePath, partSeq, uploadedData, exter
     const start = partSeq * splitSize;
     const end = Math.min(start + splitSize, data.size) - 1;
     
-    const onBodySent = (chunk) => {
+    const onBodySentHandler = (chunkSize) => {
         if (externalAbort.aborted) {
             return;
         }
-        uploadedData.all += chunk.length;
-        uploadedData.parts[partSeq] += chunk.length;
+        uploadedData.all += chunkSize;
+        uploadedData.parts[partSeq] += chunkSize;
         
-        printUploadLog(uploadedData, data.size);
+        printProgressLog('Uploading', uploadedData, data.size);
     }
     
     for (let i = 0; i < maxTries; i++) {
@@ -371,7 +362,7 @@ async function uploadChunkTask(app, data, filePath, partSeq, uploadedData, exter
         }
         
         try{
-            const r = await app.uploadChunk(data, partSeq, blob, onBodySent, externalAbort);
+            const r = await app.uploadChunk(data, partSeq, blob, onBodySentHandler, externalAbort);
             return { part: partSeq, r, done: true };
             break;
         }
@@ -405,22 +396,27 @@ async function uploadChunkTask(app, data, filePath, partSeq, uploadedData, exter
     throw new Error(`Upload failed! [PART #${partSeq+1}]`);
 }
 
-async function uploadChunks(app, data, filePath) {
-    const splitSize = getChunkSize(data.size);
-    const totalChunks = data.hash.chunks.length;
-    
-    const externalAbortController = new AbortController();
-    
-    const tasks = [];
-    const uploadedData = {
+function newProgressData() {
+    return {
         all: 0,
         start: Date.now(),
         parts: {},
-    };
+    }
+}
+
+async function uploadChunks(app, data, filePath) {
+    const splitSize = getChunkSize(data.size);
+    const totalChunks = data.hash.chunks.length;
+    const lastChunkSize = data.size - splitSize * (data.hash.chunks.length - 1);
+    
+    const tasks = [];
+    const uploadedData = newProgressData();
+    const externalAbortController = new AbortController();
     
     if(data.uploaded.filter(pStatus => pStatus == false).length > 0){
         for (let partSeq = 0; partSeq < totalChunks; partSeq++) {
             if(data.uploaded[partSeq]){
+                const chunkSize = partSeq < totalChunks - 1 ? splitSize : lastChunkSize;
                 uploadedData.parts[partSeq] = splitSize;
             }
         }
@@ -433,71 +429,14 @@ async function uploadChunks(app, data, filePath) {
             }
         }
         
-        const upload_status = await runWithConcurrencyLimit(tasks, maxTasks);
+        const cMaxTasks = totalChunks > 1 ? maxTasks : 1;
+        const upload_status = await runWithConcurrencyLimit(tasks, cMaxTasks);
+        console.log(); // reset stdout after process.write
         externalAbortController.abort();
         return upload_status;
     }
     
     return true;
-}
-
-async function uploadFile(app, data, filePath){
-    const uploadedData = {
-        all: 0,
-        start: Date.now(),
-        parts: {},
-    };
-    
-    const onBodySent = (chunk) => {
-        uploadedData.all += chunk.length;
-        uploadedData.parts[0] += chunk.length;
-        
-        printUploadLog(uploadedData, data.size);
-    }
-    
-    for (let i = 0; i < maxTries; i++) {
-        
-        uploadedData.parts[0] = 0;
-        const chunk = fs.createReadStream(filePath);
-        const blob = {
-            type: 'application/octet-stream',
-            name: 'file',
-            [Symbol.toStringTag]: 'Blob',
-            size: data.size,
-            stream() {
-                return chunk
-            }
-        }
-        
-        try{
-            const r = await app.uploadChunk(data, 0, blob, onBodySent);
-            return { r, done: true };
-            break;
-        }
-        catch(error){
-            readline.clearLine(process.stdout, 0);
-            readline.cursorTo(process.stdout, 0, null);
-            
-            let message = error.message;
-            if(error.cause){
-                message += ' Cause';
-                if(error.cause.errno){
-                    message += ' #' + error.cause.errno;
-                }
-                if(error.cause.code){
-                    message += ' ' + error.cause.code;
-                }
-            }
-            
-            const uplFailedMsg1 = ' -> Upload failed';
-            const uplFailedMsg2 = `: ${message}`;
-            const doRetry = i+1 != maxTries ? `, retry #${i+1}` : '';
-            
-            process.stdout.write(uplFailedMsg1 + uplFailedMsg2 + doRetry + '...\n');
-        }
-    }
-    
-    return { done: false };
 }
 
 function unwrapErrorMessage(err) {
@@ -518,16 +457,15 @@ function unwrapErrorMessage(err) {
 }
 
 export {
-    loadJson,
-    saveJson,
+    loadYaml,
+    saveYaml,
     selectAccount,
     showAccountInfo,
-    selectLocalDir,
-    selectRemoteDir,
-    scanLocalDir,
+    selectLocalPath,
+    selectRemotePath,
+    scanLocalPath,
     getChunkSize,
     hashFile,
     uploadChunks,
-    uploadFile,
     unwrapErrorMessage,
 };

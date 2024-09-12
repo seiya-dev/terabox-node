@@ -1,4 +1,5 @@
-import * as undici from 'undici';
+import { DecoratorHandler, Agent, FormData, request } from 'undici';
+import { filesize } from 'filesize';
 
 const TERABOX_UA = 'terabox;1.31.0.1;PC;PC-Windows;10.0.22631;WindowsTeraBox';
 const TERABOX_BASE_URL = 'https://www.terabox.com';
@@ -16,38 +17,28 @@ function makeRemoteFPath(sdir, sfile){
     return tdir + sfile;
 }
 
-/*
-some web ui for phone:
-https://www.terabox.com/wap/coins
-https://www.terabox.com/wap/commercial/taskcenter
-https://www.terabox.com/wap/glodminer
-https://www.terabox.com/wap/webmaster
-https://www.terabox.com/wap/outlogin
-https://www.terabox.com/wap/outlogin/emailRegister
-
-https://pan.baidu.com/union/doc/pksg0s9ns
-https://www.terabox.com/login?from=pc&lang=en&show_third_login=1
-https://www.staticcc.com/fe-opera-static/node-static-v4/fe-webv4-main/js/login.71e8269f.js
-https://www.terabox.com/rest/2.0/pcs/file?method=locateupload
-https://www.terabox.com/share/teratransfer/sharelist?app_id=250528&web=1&channel=dubox&clienttype=0&page=1&page_size=10
-https://www.terabox.com/api/filemetas?dlink=1&origin=dlna&target=["/Videos/Anime/Dragon Ball/[SoM] Dragon Ball DBOX CC (DVD 480p)/Dragon.Ball.001.DBOX.CC.480p.x264-SoM.mkv"]
-
-not tested api:
-POST https://www.terabox.com/api/recycle/delete TERABOX_APP_PARAMS jsToken=
-fidlist=[12345]
-
-GET https://www.terabox.com/share/teratransfer/sharelist TERABOX_APP_PARAMS jsToken= page=1 page_size=10
-
-POST https://www.terabox.com/share/pset TERABOX_APP_PARAMS jsToken=
-schannel=4 channel_list=[0] period=0 path_list=["/sharefolder"] from=teraTransfer pwd=XXXXXX fid_list=[12345]
-
-https://www.terabox.com/api/filemanager?async=2&onnest=fail&opera=delete TERABOX_APP_PARAMS &jsToken=
-filelist=[12345]
-
-https://www.terabox.com/s/SHORTURL
-https://www.terabox.com/sharing/link?surl=SHORTURL
-https://www.terabox.com/share/list?TERABOX_APP_PARAMS&jsToken=&page=1&num=20&by=name&order=asc&site_referer=&shorturl=SHORTURL&root=1
-*/
+class FormUrlEncoded {
+    constructor(params) {
+        this.data = new URLSearchParams();
+        if(typeof params === 'object' && params !== null){
+            for (const [key, value] of Object.entries(params)) {
+                this.data.append(key, value);
+            }
+        }
+    }
+    set(param, value){
+        this.data.set(param, value);
+    }
+    append(param, value){
+        this.data.append(param, value);
+    }
+    delete(param){
+        this.data.delete(param);
+    }
+    str(){
+        return this.data.toString().replace(/\+/g, '%20');
+    }
+}
 
 class TeraBoxApp {
     constructor(ndus) {
@@ -59,6 +50,7 @@ class TeraBoxApp {
             jsToken: '', 
         };
         this.params = {
+            ua: TERABOX_UA,
             auth: `lang=${TERABOX_UI_LANG};${ndus?' ndus='+ndus:''}`,
             is_vip: true,
             vip_type: 2,
@@ -71,7 +63,7 @@ class TeraBoxApp {
         const url = new URL(TERABOX_BASE_URL + '/main');
         
         try{
-            const req = await fetch(url, {
+            const req = await request(url, {
                 headers:{
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.params.auth,
@@ -79,15 +71,17 @@ class TeraBoxApp {
                 signal: AbortSignal.timeout(TERABOX_TIMEOUT),
             });
             
-            const rdata = await req.text();
-            const tdata = JSON.parse(rdata.match(/<script>var templateData = (.*);<\/script>/)[1]);
+            const rdata = await req.body.text();
+            const tdataRegex = /<script>var templateData = (.*);<\/script>/;
+            const tdata = rdata.match(tdataRegex) ? JSON.parse(rdata.match(tdataRegex)[1]) : {};
             
             if(!noJsToken){
                 if(tdata.jsToken){
                     tdata.jsToken = tdata.jsToken.match(/%28%22(.*)%22%29/)[1];
                 }
                 else{
-                    console.error('[ERROR] Failed to update jsToken');
+                    const isLoginReq = req.headers.location == '/login' ? true : false;
+                    console.error('[ERROR] Failed to update jsToken', (isLoginReq ? '[Login Required]' : ''));
                 }
             }
             
@@ -99,8 +93,13 @@ class TeraBoxApp {
             return tdata;
         }
         catch(error){
+            const errorPrefix = '[ERROR] Failed to update jsToken:';
+            if(error.name == 'TimeoutError'){
+                console.error(errorPrefix, error.message);
+                return;
+            }
             error = new Error('updateAppData', { cause: error });
-            console.error('[ERROR] Failed to update jsToken:', error);
+            console.error(errorPrefix, error);
         }
     }
     
@@ -108,7 +107,7 @@ class TeraBoxApp {
         const url = new URL(TERABOX_BASE_URL + '/api/check/login');
         
         try{
-            const req = await fetch(url, {
+            const req = await request(url, {
                 headers: {
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.params.auth,
@@ -116,11 +115,11 @@ class TeraBoxApp {
                 signal: AbortSignal.timeout(TERABOX_TIMEOUT),
             });
             
-            if (!req.ok) {
-                throw new Error(`HTTP error! Status: ${req.status}`);
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
             
-            const rdata = await req.json();
+            const rdata = await req.body.json();
             return rdata;
         }
         catch(error){
@@ -135,7 +134,7 @@ class TeraBoxApp {
         });
         
         try{
-            const req = await fetch(url, {
+            const req = await request(url, {
                 headers: {
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.params.auth,
@@ -143,11 +142,11 @@ class TeraBoxApp {
                 signal: AbortSignal.timeout(TERABOX_TIMEOUT),
             });
             
-            if (!req.ok) {
-                throw new Error(`HTTP error! Status: ${req.status}`);
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
             
-            const rdata = await req.json();
+            const rdata = await req.body.json();
             if(rdata.error_code == 0){
                 this.params.vip_type = rdata.data.member_info.is_vip;
                 this.params.is_vip = this.params.vip_type > 0 ? true : false;
@@ -163,7 +162,7 @@ class TeraBoxApp {
         const url = new URL(TERABOX_BASE_URL + '/passport/get_info');
         
         try{
-            const req = await fetch(url, {
+            const req = await request(url, {
                 headers: {
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.params.auth,
@@ -171,11 +170,11 @@ class TeraBoxApp {
                 signal: AbortSignal.timeout(TERABOX_TIMEOUT),
             });
             
-            if (!req.ok) {
-                throw new Error(`HTTP error! Status: ${req.status}`);
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
             
-            const rdata = await req.json();
+            const rdata = await req.body.json();
             return rdata;
         }
         catch (error) {
@@ -190,7 +189,7 @@ class TeraBoxApp {
         });
         
         try{
-            const req = await fetch(url, {
+            const req = await request(url, {
                 headers: {
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.params.auth,
@@ -198,11 +197,11 @@ class TeraBoxApp {
                 signal: AbortSignal.timeout(TERABOX_TIMEOUT),
             });
             
-            if (!req.ok) {
-                throw new Error(`HTTP error! Status: ${req.status}`);
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
             
-            const rdata = await req.json();
+            const rdata = await req.body.json();
             if(rdata.errno == 0){
                 rdata.available = rdata.total - rdata.used;
                 this.params.space_available = rdata.available;
@@ -214,36 +213,39 @@ class TeraBoxApp {
         }
     }
     
-    async getRemoteDir(remoteDir){
-        // alternative api:
-        // URL: `${TERABOX_BASE_URL}/rest/2.0/xpan/file`
-        // QS: `method=list&dir=${remoteDir}`
+    async getRemoteDir(remoteDir, page = 1){
         const url = new URL(TERABOX_BASE_URL + '/api/list');
         url.search = new URLSearchParams({
             ...TERABOX_APP_PARAMS,
             jsToken: this.data.jsToken,
-            order: 'name',
-            desc: 0,
-            dir: remoteDir,
-            num: 20000,
-            page: 1,
-            showempty: 0,
         });
         
+        const formData = new FormUrlEncoded();
+        // formData.append('method', 'list');
+        formData.append('order', 'name');
+        formData.append('desc', 0);
+        formData.append('dir', remoteDir);
+        formData.append('num', 20000);
+        formData.append('page', page);
+        formData.append('showempty', 0);
+        
         try{
-            const req = await fetch(url, {
+            const req = await request(url, {
+                method: 'POST',
+                body: formData.str(),
                 headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.params.auth,
                 },
                 signal: AbortSignal.timeout(TERABOX_TIMEOUT),
             });
             
-            if (!req.ok) {
-                throw new Error(`HTTP error! Status: ${req.status}`);
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
             
-            const rdata = await req.json();
+            const rdata = await req.body.json();
             return rdata;
         }
         catch (error) {
@@ -263,7 +265,7 @@ class TeraBoxApp {
         });
         
         try{
-            const req = await fetch(url, {
+            const req = await request(url, {
                 headers: {
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.params.auth,
@@ -271,11 +273,11 @@ class TeraBoxApp {
                 signal: AbortSignal.timeout(TERABOX_TIMEOUT),
             });
             
-            if (!req.ok) {
-                throw new Error(`HTTP error! Status: ${req.status}`);
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
             
-            const rdata = await req.json();
+            const rdata = await req.body.json();
             return rdata;
         }
         catch (error) {
@@ -288,11 +290,11 @@ class TeraBoxApp {
         url.search = new URLSearchParams({
             ...TERABOX_APP_PARAMS,
             jsToken: this.data.jsToken,
-            'async': 1,
+            // 'async': 1,
         });
         
         try{
-            const req = await fetch(url, {
+            const req = await request(url, {
                 headers: {
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.params.auth,
@@ -300,11 +302,11 @@ class TeraBoxApp {
                 signal: AbortSignal.timeout(TERABOX_TIMEOUT),
             });
             
-            if (!req.ok) {
-                throw new Error(`HTTP error! Status: ${req.status}`);
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
             
-            const rdata = await req.json();
+            const rdata = await req.body.json();
             return rdata;
         }
         catch (error) {
@@ -326,7 +328,7 @@ class TeraBoxApp {
                 throw new Error(`${user_id} is not user id`);
             }
             
-            const req = await fetch(url, {
+            const req = await request(url, {
                 headers: {
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.params.auth,
@@ -334,11 +336,11 @@ class TeraBoxApp {
                 signal: AbortSignal.timeout(TERABOX_TIMEOUT),
             });
             
-            if (!req.ok) {
-                throw new Error(`HTTP error! Status: ${req.status}`);
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
             
-            const rdata = await req.json();
+            const rdata = await req.body.json();
             return rdata;
         }
         catch (error) {
@@ -347,7 +349,7 @@ class TeraBoxApp {
     }
     
     async precreateFile(data){
-        const formData = new URLSearchParams();
+        const formData = new FormUrlEncoded();
         formData.append('path', makeRemoteFPath(data.remote_dir, data.file));
         formData.append('size', data.size);
         formData.append('isdir', 0);
@@ -370,21 +372,22 @@ class TeraBoxApp {
         });
         
         try{
-            const req = await fetch(url, {
+            const req = await request(url, {
                 method: 'POST',
-                body: formData,
+                body: formData.str(),
                 headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.params.auth,
                 },
                 signal: AbortSignal.timeout(TERABOX_TIMEOUT),
             });
             
-            if (!req.ok) {
-                throw new Error(`HTTP error! Status: ${req.status}`);
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
             
-            const rdata = await req.json();
+            const rdata = await req.body.json();
             return rdata;
         }
         catch (error) {
@@ -393,9 +396,9 @@ class TeraBoxApp {
     }
     
     async rapidUpload(data){
-        const formData = new URLSearchParams();
+        const formData = new FormUrlEncoded();
         formData.append('path', makeRemoteFPath(data.remote_dir, data.file));
-        formData.append('target_path', data.remote_dir);
+        // formData.append('target_path', data.remote_dir);
         formData.append('content-length', data.size);
         formData.append('content-md5', data.hash.file);
         formData.append('slice-md5', data.hash.slice);
@@ -423,22 +426,22 @@ class TeraBoxApp {
                 throw new Error(`File size too small!`);
             }
             
-            const req = await fetch(url, {
+            const req = await request(url, {
                 method: 'POST',
-                body: formData,
+                body: formData.str(),
                 headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.params.auth,
                 },
-                duplex: 'half',
                 signal: AbortSignal.timeout(TERABOX_TIMEOUT),
             });
             
-            if (!req.ok) {
-                throw new Error(`HTTP error! Status: ${req.status}`);
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
             
-            const rdata = await req.json();
+            const rdata = await req.body.json();
             return rdata;
         }
         catch (error) {
@@ -446,34 +449,33 @@ class TeraBoxApp {
         }
     }
     
-    async uploadChunk(data, partseq, chunk, onBodySent, externalAbort) {
+    async uploadChunk(data, partseq, chunk, onBodySentHandler, externalAbort) {
+        // preconfig request
         externalAbort = externalAbort ? externalAbort : new AbortController().signal;
-        
-        const formData = new FormData();
-        formData.append('file', chunk);
-        
         const timeoutAborter = new AbortController;
-        let timeoutId = setTimeout(() => {
+        const timeoutId = setTimeout(() => {
             timeoutAborter.abort();
         }, TERABOX_TIMEOUT);
-        
         const undiciInterceptor = (dispatch) => {
-            class undiciInterceptorBody extends undici.DecoratorHandler {
+            class undiciInterceptorBody extends DecoratorHandler {
                 onBodySent(chunk) {
+                    let chunkSize = chunk.length;
+                    const chunckTxt = (new TextDecoder()).decode(chunk);
+                    if(chunckTxt.match(/^------formdata-undici-/)){
+                        chunkSize = -1;
+                    }
                     timeoutId.refresh();
-                    
-                    if (onBodySent){
-                        onBodySent(chunk);
+                    if (onBodySentHandler){
+                        onBodySentHandler(chunkSize);
                     }
                 }
             }
-            
             return function InterceptedDispatch(opts, handler) {
                 return dispatch(opts, new undiciInterceptorBody(handler));
             };
         };
-        
-        let dispatcher = new undici.Agent().compose(undiciInterceptor);
+        const dispatcher = new Agent().compose(undiciInterceptor);
+        // --
         
         const url = new URL(TERABOX_BASE_URL.replace('www', 'c-jp') + '/rest/2.0/pcs/superfile2');
         url.search = new URLSearchParams({
@@ -485,28 +487,31 @@ class TeraBoxApp {
             partseq: partseq,
         });
         
-        const req = await fetch(url, {
+        const formData = new FormData();
+        formData.append('file', chunk);
+
+        const req = await dispatcher.request({
+            origin: url.origin,
+            path: `${url.pathname}${url.search}`,
             method: 'POST',
             body: formData,
             headers: {
                 'User-Agent': TERABOX_UA,
                 'Cookie': this.params.auth,
             },
-            duplex: 'half',
             signal: AbortSignal.any([
                 externalAbort,
                 timeoutAborter.signal,
             ]),
-            dispatcher,
         });
         
         clearTimeout(timeoutId);
         
-        if (!req.ok) {
-            throw new Error(`HTTP error! Status: ${req.status}`);
+        if (req.statusCode !== 200) {
+            throw new Error(`HTTP error! Status: ${req.statusCode}`);
         }
         
-        const res = await req.json();
+        const res = await req.body.json();
         
         if (!res.error_code) {
             if (res.md5 !== data.hash.chunks[partseq]) {
@@ -522,8 +527,8 @@ class TeraBoxApp {
         return res;
     }
     
-    async createFolder(remoteDir){
-        const formData = new URLSearchParams();
+    async createDir(remoteDir){
+        const formData = new FormUrlEncoded();
         formData.append('path', remoteDir);
         formData.append('isdir', 1);
         formData.append('block_list', '[]');
@@ -536,21 +541,22 @@ class TeraBoxApp {
         });
         
         try{
-            const req = await fetch(url, {
+            const req = await request(url, {
                 method: 'POST',
-                body: formData,
+                body: formData.str(),
                 headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.params.auth,
                 },
                 signal: AbortSignal.timeout(TERABOX_TIMEOUT),
             });
             
-            if (!req.ok) {
-                throw new Error(`HTTP error! Status: ${req.status}`);
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
             
-            const rdata = await req.json();
+            const rdata = await req.body.json();
             return rdata;
         }
         catch (error) {
@@ -559,7 +565,7 @@ class TeraBoxApp {
     }
     
     async createFile(data) {
-        const formData = new URLSearchParams();
+        const formData = new FormUrlEncoded();
         formData.append('path', makeRemoteFPath(data.remote_dir, data.file));
         formData.append('size', data.size);
         formData.append('isdir', 0);
@@ -581,26 +587,74 @@ class TeraBoxApp {
         });
         
         try{
-            const req = await fetch(url, {
+            const req = await request(url, {
                 method: 'POST',
-                body: formData,
+                body: formData.str(),
                 headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.params.auth,
                 },
-                duplex: 'half',
                 signal: AbortSignal.timeout(TERABOX_TIMEOUT),
             });
             
-            if (!req.ok) {
-                throw new Error(`HTTP error! Status: ${req.status}`);
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
             
-            const rdata = await req.json();
+            const rdata = await req.body.json();
             return rdata;
         }
         catch (error) {
+            console.log(error);
             throw new Error('createFile', { cause: error });
+        }
+    }
+    
+    async filemanager(operation, fmparams){
+        const url = new URL(TERABOX_BASE_URL + '/api/filemanager');
+        url.search = new URLSearchParams({
+            ...TERABOX_APP_PARAMS,
+            jsToken: this.data.jsToken,
+            // 'async': 2,
+            onnest: 'fail',
+            opera: operation, // delete, copy, move, rename
+        });
+        
+        if(!Array.isArray(fmparams)){
+            throw new Error('filemanager', { cause: new Error('FS paths should be in array!') });
+        }
+        
+        // For Delete: ["/path1","path2.rar"]
+        // For Move: [{"path":"/myfolder/source.bin","dest":"/target/","newname":"newfilename.bin"}]
+        // For Copy same as move
+        // + "ondup": newcopy, overwrite (optional, skip by default)
+        // For rename [{"id":1111,"path":"/dir1/src.bin","newname":"myfile2.bin"}]
+        
+        const formData = new FormUrlEncoded();
+        formData.append('filelist', JSON.stringify(fmparams));
+        
+        try{
+            const req = await request(url, {
+                method: 'POST',
+                body: formData.str(),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': TERABOX_UA,
+                    'Cookie': this.params.auth,
+                },
+                signal: AbortSignal.timeout(TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('filemanager', { cause: error });
         }
     }
     
@@ -613,7 +667,7 @@ class TeraBoxApp {
         });
         
         try{
-            const req = await fetch(url, {
+            const req = await request(url, {
                 headers: {
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.params.auth,
@@ -621,11 +675,11 @@ class TeraBoxApp {
                 signal: AbortSignal.timeout(TERABOX_TIMEOUT),
             });
             
-            if (!req.ok) {
-                throw new Error(`HTTP error! Status: ${req.status}`);
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
             
-            const rdata = await req.json();
+            const rdata = await req.body.json();
             return rdata;
         }
         catch (error) {
@@ -634,7 +688,7 @@ class TeraBoxApp {
     }
     
     async fileDiff(){ // Untested API
-        const formData = new URLSearchParams();
+        const formData = new FormUrlEncoded();
         formData.append('cursor', this.params.cursor);
         if(this.params.cursor == 'null'){
             formData.append('c', 'full');
@@ -654,21 +708,22 @@ class TeraBoxApp {
         });
         
         try{
-            const req = await fetch(url, {
+            const req = await request(url, {
                 method: 'POST',
-                body: formData,
+                body: formData.str(),
                 headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.params.auth,
                 },
                 signal: AbortSignal.timeout(TERABOX_TIMEOUT),
             });
             
-            if (!req.ok) {
-                throw new Error(`HTTP error! Status: ${req.status}`);
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
             
-            const rdata = await req.json();
+            const rdata = await req.body.json();
             if(rdata.errno == 0){
                 this.params.cursor = rdata.cursor;
                 if(!Array.isArray(rdata.request_id)){
@@ -702,7 +757,7 @@ class TeraBoxApp {
         });
         
         try{
-            const req = await fetch(url, {
+            const req = await request(url, {
                 headers: {
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.params.auth,
@@ -710,11 +765,11 @@ class TeraBoxApp {
                 signal: AbortSignal.timeout(TERABOX_TIMEOUT),
             });
             
-            if (!req.ok) {
-                throw new Error(`HTTP error! Status: ${req.status}`);
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
             
-            const rdata = await req.json();
+            const rdata = await req.body.json();
             return rdata;
         }
         catch (error) {
@@ -730,7 +785,7 @@ class TeraBoxApp {
         });
         
         try{
-            const req = await fetch(url, {
+            const req = await request(url, {
                 headers: {
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.params.auth,
@@ -738,15 +793,48 @@ class TeraBoxApp {
                 signal: AbortSignal.timeout(TERABOX_TIMEOUT),
             });
             
-            if (!req.ok) {
-                throw new Error(`HTTP error! Status: ${req.status}`);
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
             
-            const rdata = await req.json();
+            const rdata = await req.body.json();
             return rdata;
         }
         catch (error) {
             throw new Error('getHomeInfo', { cause: error });
+        }
+    }
+    
+    async getFileMeta(remote_file_list){
+        const url = new URL(TERABOX_BASE_URL + '/api/filemetas');
+        
+        const formData = new FormUrlEncoded();
+        formData.append('dlink', 1);
+        formData.append('origin', 'dlna');
+        formData.append('target', JSON.stringify(remote_file_list));
+        
+        try{
+            const req = await request(url, {
+                method: 'POST',
+                body: formData.str(),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': TERABOX_UA,
+                    'Cookie': this.params.auth,
+                },
+                signal: AbortSignal.timeout(TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('getFileMeta', { cause: error });
         }
     }
 }

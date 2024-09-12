@@ -1,5 +1,9 @@
+_upload_test
 node_modules
 .config.json
+.config.yaml
 *.mkv
 *.7z
+*.pdf
+*.txt
 .vscode

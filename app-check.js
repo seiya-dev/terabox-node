@@ -8,7 +8,7 @@ import Argv from './modules/app-argv.js';
 import TeraBoxApp from './modules/api.js';
 
 import {
-    loadJson,
+    loadYaml,
     selectAccount,
     showAccountInfo,
 } from './modules/app-helper.js';
@@ -16,10 +16,10 @@ import {
 // init app
 let app = {};
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const config = loadJson(path.resolve(__dirname, './.config.json'));
-const meta = loadJson(path.resolve(__dirname, './package.json'));
+const config = loadYaml(path.resolve(__dirname, './.config.yaml'));
+const meta = loadYaml(path.resolve(__dirname, './package.json'));
 
-console.log('[INFO] TeraBox App', 'v' + meta.version, '(Check Module)');
+console.log(`[INFO] ${meta.name_ext} v${meta.version} (Check Module)`);
 
 (async () => {
     if(!config.accounts){
