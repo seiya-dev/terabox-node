@@ -1,34 +1,34 @@
-# Usage
-Install NodeJS version 20 or higher. Then install required modules with npm (or other preferred package manager).
 
-## Scripts
+## Usage
+These  are some files for now to use `terabox-node`.
 
-### Check Accounts:
-**node "app-check.js"**
+### Check Accounts
+This command checks that your accounts are finely working or not.
+```bash
+node app-check.js
 ```
-no options for this script
+
+### Upload Folders/Files
+To upload files or folders to terabox use this command.
+```bash
+node app-uploader.js <options> <values>
 ```
-### Upload Folders/Files:
-**node "app-uploader.js"**
+```bash
+<options>
+    -a "acc"           select account (by name from ".config.yaml")
+    -l "/"             select local directory
+    -r "/"             select remote directory
+    --no-rapidupload   don't use rapidupload function
 ```
--a "acc"           select account (by name from ".config.yaml")
--l "/"             select local directory
--r "/"             select remote directory
---no-rapidupload   don't use rapidupload function
+
+### Download Folders/Files
+We are working on downloading files from terabox.
+```bash
+NOT AVAILABLE FOR NOW
 ```
-### Create TBHash for RapidUpload:
-**node "app-mktbhash.js"**
-```
--l "/"             select local directory
---skip-chunks      don't create chunck hashes
-```
-### Download Files from Remote:
-**node "app-getdl.js"**
-```
-IN DEVELOPMENT, use alist for now
-```
-### Fetch File Meta Information from Remote:
-**node "app-filemeta.js"**
-```
-IN DEVELOPMENT
+
+### Metadata Files
+We are constantly working on providing you metadata of files from terabox.
+```bash
+NOT AVAILABLE FOR NOW
 ```
