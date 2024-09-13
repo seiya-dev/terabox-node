@@ -2,7 +2,9 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'url';
+import { request } from 'undici';
 
 import Argv from './modules/app-argv.js';
 import TeraBoxApp from './modules/api.js';
@@ -21,6 +23,7 @@ const config = loadYaml(path.resolve(__dirname, './.config.yaml'));
 const meta = loadYaml(path.resolve(__dirname, './package.json'));
 
 console.log('[INFO] TeraBox App', 'v' + meta.version, '(GetDL Module)');
+let sRoot = '';
 
 const yargs = new Argv(config, ['a','l','r']);
 if(yargs.getArgv('help')){
@@ -33,10 +36,9 @@ if(yargs.getArgv('help')){
         await getDL();
     }
     catch(error){
-        console.log(error);
+        console.error(error);
     }
 })();
-
 
 async function getDL(){
     if(!config.accounts){
@@ -64,43 +66,86 @@ async function getDL(){
     console.log();
     
     const remotePath = await selectRemotePath(yargs.getArgv('r'));
+    const fsList = await getRemotePaths(remotePath);
+    
+    if(fsList.length > 0){
+        await addDownloads(fsList);
+    }
+    
+};
+
+async function getRemotePaths(remotePath){
+    console.log(':: Requesting Remote:', remotePath);
     const remotePathData = await app.getRemoteDir(remotePath);
     
     if(remotePathData.errno == 0){
-        let getMeta;
         if(remotePathData.list.length == 0){
-            getMeta = await app.getFileMeta([remotePath]);
+            sRoot = remotePath.split('/').slice(0, -1).join('/');
+            return [remotePath];
         }
         else{
+            if(sRoot == ''){
+                sRoot = remotePathData.list[0].path.split('/').slice(0, -1).join('/') || '/';
+            }
             const fileList = [];
             for(const f of remotePathData.list){
-                if(f.isdir == 0){
+                if(f.isdir == 1){
+                    const subList = await getRemotePaths(f.path);
+                    fileList.push(...subList);
+                }
+                else{
                     fileList.push(f.path);
                 }
             }
-            getMeta = await app.getFileMeta(fileList);
-        }
-        if(getMeta.info.length > 0){
-            console.log('Aria2 WebUI ULRs:\n');
-            
-            const rRoot = getMeta.info[0].path.split('/').slice(0, -1).join('/') || '/';
-            let folderName = '/';
-            
-            if(rRoot != '/'){
-                folderName = rRoot.split('/').at(-1);
-                folderName += '/'
-            }
-            
-            console.log('Folder:', folderName, '\n');
-            
-            for(const f of getMeta.info){
-                console.log(`${f.dlink} -o "${f.server_filename}"`);
-            }
+            return fileList;
         }
     }
     else{
         console.log(':: Wrong remote path!');
+        return [];
     }
     
     console.log();
-};
+}
+
+async function addDownloads(fsList){
+    const getMeta = await app.getFileMeta(fsList);
+    
+    // aria2c -x 16 -s 10 -j 4 -k 1M --enable-rpc --rpc-allow-origin-all=true --dir=D:/Downloads --rpc-secret=YOUR_ARIA2_RPC_SECRET
+    // https://aria2.github.io/manual/en/html/aria2c.html#aria2.addUri
+    
+    const jsonReq = { 
+        jsonrpc: '2.0',
+        id: 'DOWNLOAD_ID',
+        method: 'aria2.addUri',
+        params: [ 'token:' + config.aria2.secret ],
+    };
+    
+    const rpcReq = [];
+    for(const [i, f] of getMeta.info.entries()){
+        rpcReq.push(structuredClone(jsonReq));
+        
+        const folderName = f.path.split('/').slice(0, -1).join('/')
+            .replace(new RegExp('^' + sRoot), '')
+            .replace(new RegExp('^/'), '');
+        
+        rpcReq[i].id = crypto.randomUUID();
+        rpcReq[i].params.push([f.dlink]);
+        rpcReq[i].params.push({ out: (folderName?folderName+'/':'') + f.server_filename });
+    }
+    
+    try{
+        const rpcUrl = new URL(config.aria2.url);
+        const req = await request(rpcUrl, {
+            method: 'POST',
+            body: JSON.stringify(rpcReq),
+        });
+        console.log('ADDING...');
+        console.log('CODE:', req.statusCode);
+        console.log(await req.body.json());
+    }
+    catch(error){
+        error = new Error('aria2.addUri', { cause: error });
+        console.error(error);
+    }
+}

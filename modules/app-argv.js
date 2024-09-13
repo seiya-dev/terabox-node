@@ -2,6 +2,11 @@ import * as YargsInit from 'yargs';
 
 class Args {
     constructor(config, reqArgs = []){
+        if(typeof config.accounts !== 'object' || Array.isArray(config.accounts) && config.accounts === null){
+            config.accounts = {
+                empty: '',
+            };
+        }
         this.accounts = Object.keys(config.accounts);
         this.remote_dir = config.remote_dir;
         this.yargs = YargsInit.default(process.argv);

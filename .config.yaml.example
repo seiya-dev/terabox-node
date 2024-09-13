@@ -1,2 +1,5 @@
 accounts:
   main: ...
+aria2:
+  url: http://localhost:6800/jsonrpc
+  secret: YOUR_ARIA2_RPC_SECRET

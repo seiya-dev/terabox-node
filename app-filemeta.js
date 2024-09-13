@@ -68,6 +68,7 @@ async function getMeta(){
     const remotePathData = await app.getRemoteDir(remotePath);
     
     if(remotePathData.errno == 0){
+        console.log(':: Selected Remote Path:', remotePath, '\n');
         await showMeta(remotePath, remotePathData);
     }
 }
@@ -92,20 +93,12 @@ async function showMeta(rPath, pathData){
             continue;
         }
         
-        console.log(f);
-        
-        const fdata = {
-            dlink:   f.dlink,
-            root:    f.path.split('/').slice(0, -1).join('/') || '/',
-            file:    f.server_filename,
-            size:    f.size,
-            sizef:   filesize(f.size, {standard: 'iec', round: 3, pad: true}),
-        };
-        
-        // reqh.headers.get('x-bs-meta-crc32')
-        // reqh.headers.get('content-md5')
-        // reqh.headers.get('x-bs-file-size')
-        
-        // console.log(fdata);
+        console.log('FS ID:', f.fs_id);
+        console.log('Path :', f.path.split('/').slice(0, -1).join('/') || '/');
+        console.log('File :', f.server_filename);
+        console.log('Size :', f.size);
+        console.log('Size :', filesize(f.size, {standard: 'iec', round: 2}));
+        // console.log('DLink:', f.dlink);
+        console.log();
     }
 } 
