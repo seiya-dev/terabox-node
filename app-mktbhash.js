@@ -21,7 +21,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const config = loadYaml(path.resolve(__dirname, './.config.yaml'));
 const meta = loadYaml(path.resolve(__dirname, './package.json'));
 
-console.log('[INFO] TeraBox App', 'v' + meta.version, '(Make TBHash Module)');
+console.log(`[INFO] ${meta.name_ext} v${meta.version} (Make TBHash Module)`);
 
 const yargs = new Argv(config, ['l','skip-chunks']);
 if(yargs.getArgv('help')){

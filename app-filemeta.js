@@ -21,9 +21,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const config = loadYaml(path.resolve(__dirname, './.config.yaml'));
 const meta = loadYaml(path.resolve(__dirname, './package.json'));
 
-console.log('[INFO] TeraBox App', 'v' + meta.version, '(FileMeta Module)');
+console.log(`[INFO] ${meta.name_ext} v${meta.version} (FileMeta Module)`);
 
-const yargs = new Argv(config, ['a','l','r']);
+const yargs = new Argv(config, ['a','r']);
 if(yargs.getArgv('help')){
     yargs.showHelp();
     process.exit();
