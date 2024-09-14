@@ -20,6 +20,9 @@ importers:
       filesize:
         specifier: ^10.1.6
         version: 10.1.6
+      tough-cookie:
+        specifier: ^5.0.0
+        version: 5.0.0
       undici:
         specifier: ^6.19.8
         version: 6.19.8
@@ -134,6 +137,17 @@ packages:
   strip-ansi@6.0.1:
     resolution: {integrity: sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==}
     engines: {node: '>=8'}
+
+  tldts-core@6.1.45:
+    resolution: {integrity: sha512-5HhO4lUBhKL3kIKkDv5+DM6XfSlEKUT0hJK+w/nSY6JLNPhWYEII24Pp3FpVGtTfSB6IvDpIptIOgcrw/jhb6Q==}
+
+  tldts@6.1.45:
+    resolution: {integrity: sha512-7wj/uWW1vk+wp9WgLwUmah2DeWdHuF9oLx83IwJH4ZbhRhqKd1h9sL4vkaRMZHLVmlQcPvhqQNiRpFNPJAfIOw==}
+    hasBin: true
+
+  tough-cookie@5.0.0:
+    resolution: {integrity: sha512-FRKsF7cz96xIIeMZ82ehjC3xW2E+O2+v11udrDYewUbszngYhsGa8z6YUMMzO9QJZzzyd0nGGXnML/TReX6W8Q==}
+    engines: {node: '>=16'}
 
   type-fest@0.21.3:
     resolution: {integrity: sha512-t0rzBq87m3fVcduHDUFhKmyyX+9eo6WQjZvf51Ea/M0Q7+T374Jp1aUiyUl0GKxp8M/OETVHSDvmkyPgvX+X2w==}
@@ -275,6 +289,16 @@ snapshots:
   strip-ansi@6.0.1:
     dependencies:
       ansi-regex: 5.0.1
+
+  tldts-core@6.1.45: {}
+
+  tldts@6.1.45:
+    dependencies:
+      tldts-core: 6.1.45
+
+  tough-cookie@5.0.0:
+    dependencies:
+      tldts: 6.1.45
 
   type-fest@0.21.3: {}
 

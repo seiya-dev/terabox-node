@@ -1,7 +1,9 @@
 import { DecoratorHandler, Agent, FormData, request } from 'undici';
+import { Cookie, CookieJar } from 'tough-cookie';
+import child_process from 'node:child_process';
 import { filesize } from 'filesize';
 
-const TERABOX_UA = 'terabox;1.31.0.1;PC;PC-Windows;10.0.22631;WindowsTeraBox';
+const TERABOX_UA = 'terabox;1.32.0.1;PC;PC-Windows;10.0.22631;WindowsTeraBox';
 const TERABOX_BASE_URL = 'https://www.terabox.com';
 const TERABOX_UI_LANG = 'en';
 const TERABOX_TIMEOUT = 10000;
@@ -41,26 +43,31 @@ class FormUrlEncoded {
 }
 
 class TeraBoxApp {
+    data = {
+        csrf: '',
+        lang: TERABOX_UI_LANG,
+        logid: '0',
+        pcftoken: '',
+        bdstoken: '',
+        jsToken: '', 
+    };
+    params = {
+        domain: TERABOX_BASE_URL,
+        app: TERABOX_APP_PARAMS,
+        ua: TERABOX_UA,
+        auth: '',
+        is_vip: true,
+        vip_type: 2,
+        cursor: 'null',
+        space_available: 2 * Math.pow(1024, 3),
+    };
+    
     constructor(ndus) {
-        this.data = {
-            csrf: '',
-            lang: TERABOX_UI_LANG,
-            pcftoken: '',
-            bdstoken: '',
-            jsToken: '', 
-        };
-        this.params = {
-            ua: TERABOX_UA,
-            auth: `lang=${TERABOX_UI_LANG};${ndus?' ndus='+ndus:''}`,
-            is_vip: true,
-            vip_type: 2,
-            cursor: 'null',
-            space_available: 2 * Math.pow(1024, 3),
-        };
+        this.params.auth = `lang=${TERABOX_UI_LANG}${ndus?'; ndus='+ndus:''}`;
     }
     
-    async updateAppData(noJsToken){
-        const url = new URL(TERABOX_BASE_URL + '/main');
+    async updateAppData(customPath){
+        const url = new URL(TERABOX_BASE_URL + (customPath ? `/${customPath}` : '/main'));
         
         try{
             const req = await request(url, {
@@ -68,21 +75,36 @@ class TeraBoxApp {
                     'User-Agent': TERABOX_UA,
                     'Cookie': this.params.auth,
                 },
-                signal: AbortSignal.timeout(TERABOX_TIMEOUT),
+                signal: AbortSignal.timeout(TERABOX_TIMEOUT * 2),
             });
+            
+            if(req.headers['set-cookie']){
+                const cJar = new CookieJar();
+                this.params.auth.split(';').map(cookie => cJar.setCookieSync(cookie, TERABOX_BASE_URL));
+                for(const cookie of req.headers['set-cookie']){
+                    cJar.setCookieSync(cookie.split('; ')[0], TERABOX_BASE_URL);
+                }
+                this.params.auth = cJar.getCookiesSync(TERABOX_BASE_URL).map(cookie => cookie.cookieString()).join('; ');
+            }
             
             const rdata = await req.body.text();
             const tdataRegex = /<script>var templateData = (.*);<\/script>/;
+            const jsTokenRegex = /window.jsToken%20%3D%20a%7D%3Bfn%28%22(.*)%22%29/;
             const tdata = rdata.match(tdataRegex) ? JSON.parse(rdata.match(tdataRegex)[1]) : {};
             
-            if(!noJsToken){
-                if(tdata.jsToken){
-                    tdata.jsToken = tdata.jsToken.match(/%28%22(.*)%22%29/)[1];
-                }
-                else{
-                    const isLoginReq = req.headers.location == '/login' ? true : false;
-                    console.error('[ERROR] Failed to update jsToken', (isLoginReq ? '[Login Required]' : ''));
-                }
+            if(tdata.jsToken){
+                tdata.jsToken = tdata.jsToken.match(/%28%22(.*)%22%29/)[1];
+            }
+            else if(rdata.match(jsTokenRegex)){
+                tdata.jsToken = rdata.match(jsTokenRegex)[1];
+            }
+            else{
+                const isLoginReq = req.headers.location == '/login' ? true : false;
+                console.error('[ERROR] Failed to update jsToken', (isLoginReq ? '[Login Required]' : ''));
+            }
+            
+            if(req.headers.logid){
+                this.data.logid = req.headers.logid;
             }
             
             this.data.csrf = tdata.csrf || '';
@@ -658,32 +680,56 @@ class TeraBoxApp {
         }
     }
     
-    async shortUrlInfo(shareId){ // Untested API
+    async shortUrlInfo(shareId){
         const url = new URL(TERABOX_BASE_URL + '/api/shorturlinfo');
         url.search = new URLSearchParams({
             ...TERABOX_APP_PARAMS,
+            jsToken: this.data.jsToken,
+            shorturl: 1 + shareId,
             root: 1,
-            shorturl: shareId,
         });
         
         try{
-            const req = await request(url, {
-                headers: {
-                    'User-Agent': TERABOX_UA,
-                    'Cookie': this.params.auth,
-                },
-                signal: AbortSignal.timeout(TERABOX_TIMEOUT),
-            });
+            const curlReq = `curl -s -H "User-Agent: ${TERABOX_UA}" -H "Cookie: ${this.params.auth}" "${url.toString()}"`;
+            console.log('::', curlReq);
+            const resp = child_process.execSync(curlReq);
+            const result = resp.toString('utf8');
             
-            if (req.statusCode !== 200) {
-                throw new Error(`HTTP error! Status: ${req.statusCode}`);
-            }
-            
-            const rdata = await req.body.json();
-            return rdata;
+            return JSON.parse(result);
         }
         catch (error) {
             throw new Error('shortUrlInfo', { cause: error });
+        }
+    }
+    
+    async shortUrlList(shareId, remoteDir, page = 1){ // Untested API
+        remoteDir = remoteDir || ''
+        const url = new URL(TERABOX_BASE_URL + '/share/list');
+        url.search = new URLSearchParams({
+            ...TERABOX_APP_PARAMS,
+            jsToken: this.data.jsToken,
+            shorturl: shareId,
+            by: 'name',
+            order: 'asc',
+            num: 20000,
+            dir: remoteDir,
+            page: page,
+        });
+        
+        if(remoteDir == ''){
+            url.searchParams.append('root', '1');
+        }
+        
+        try{
+            const curlReq = `curl -s -H "User-Agent: ${TERABOX_UA}" -H "Cookie: ${this.params.auth}" "${url.toString()}"`;
+            console.log('::', curlReq);
+            const resp = child_process.execSync(curlReq);
+            const result = resp.toString('utf8');
+            
+            return JSON.parse(result);
+        }
+        catch (error) {
+            throw new Error('shortUrlList', { cause: error });
         }
     }
     

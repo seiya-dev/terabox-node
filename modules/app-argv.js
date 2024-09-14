@@ -46,6 +46,13 @@ class Args {
                         type: 'string',
                     };
                     break;
+                case 's':
+                    yargsOpts[a] = {
+                        alias: ['surl', 'sharelink'],
+                        describe: 'Input Sharable Link',
+                        type: 'string',
+                    };
+                    break;
                 case 'no-rapidupload':
                     yargsOpts[a] = {
                         describe: 'Skip Rapid Upload',

@@ -5,15 +5,13 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'url';
 import { request } from 'undici';
+import input from '@inquirer/input';
 
 import Argv from './modules/app-argv.js';
 import TeraBoxApp from './modules/api.js';
 
 import {
-    loadYaml,
-    selectAccount,
-    showAccountInfo,
-    selectRemotePath,
+    loadYaml, selectAccount,
 } from './modules/app-helper.js';
 
 // init app
@@ -22,10 +20,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const config = loadYaml(path.resolve(__dirname, './.config.yaml'));
 const meta = loadYaml(path.resolve(__dirname, './package.json'));
 
-console.log(`[INFO] ${meta.name_ext} v${meta.version} (GetDL Module)`);
+console.log(`[INFO] ${meta.name_ext} v${meta.version} (GetShareDL Module)`);
 let sRoot = '';
 
-const yargs = new Argv(config, ['a','r']);
+const yargs = new Argv(config, ['a','s']);
 if(yargs.getArgv('help')){
     yargs.showHelp();
     process.exit();
@@ -33,14 +31,14 @@ if(yargs.getArgv('help')){
 
 (async () => {
     try{
-        await getDL();
+        await getShareDL(yargs.getArgv('s'));
     }
     catch(error){
         console.error(error);
     }
 })();
 
-async function getDL(){
+async function getShareDL(argv_surl){
     if(!config.accounts){
         console.error('[ERROR] Accounts not set!');
         return;
@@ -56,65 +54,80 @@ async function getDL(){
     
     app = new TeraBoxApp(cur_acc);
     
-    const acc_check = await app.checkLogin();
-    if(acc_check.errno != 0){
-        console.error('[ERROR] "ndus" cookie is BAD!');
+    const tbUrl = argv_surl ? argv_surl : await input({ message: 'Share URL/SURL:' });
+    const regexRUrl = /^\/s\/1([A-Za-z0-9_-]+)$/;
+    const regexSUrl = /^[A-Za-z0-9_-]+$/;
+    let shareUrl = '';
+    
+    if(tbUrl.match(regexSUrl)){
+        shareUrl = tbUrl;
+    }
+    if(shareUrl == ''){
+        try{
+            const sUrl = new URL(tbUrl);
+            const sUrlSP = sUrl.searchParams.get('surl');
+            if(sUrl.pathname.match(regexRUrl)){
+                shareUrl = sUrl.pathname.match(regexRUrl)[1];
+            }
+            if(sUrl.pathname == '/sharing/link' && typeof sUrlSP == 'string' && sUrlSP.match(regexSUrl)){
+                shareUrl = sUrlSP;
+            }
+            if(shareUrl == ''){
+                throw new Error();
+            }
+        }
+        catch(error){
+            console.error(':: BAD URL', tbUrl);
+        }
+    }
+    if(shareUrl == ''){
+        await getShareDL();
         return;
     }
     
-    await showAccountInfo(app);
-    console.log();
-    
-    const remotePath = await selectRemotePath(yargs.getArgv('r'));
-    const fsList = await getRemotePaths(remotePath);
-    
-    if(fsList.length > 0){
+    await app.updateAppData();
+    const sFsList = await getRemotePath(shareUrl, '');
+    if(sFsList.length > 0){
+        const fsList = [];
+        for(const f of sFsList){
+            fsList.push({
+                path: f.path,
+                server_filename: f.server_filename,
+                dlink: f.dlink,
+            });
+        }
         await addDownloads(fsList);
     }
-    
 };
 
-async function getRemotePaths(remotePath){
-    console.log(':: Requesting Remote:', remotePath);
-    const remotePathData = await app.getRemoteDir(remotePath);
-    
-    if(remotePathData.errno == 0){
-        if(remotePathData.list.length == 0){
-            sRoot = remotePath.split('/').slice(0, -1).join('/');
-            return [remotePath];
+async function getRemotePath(shareUrl, remoteDir){
+    const shareReq = await app.shortUrlList(shareUrl, remoteDir);
+    if(shareReq.errno == 0){
+        if(sRoot == ''){
+            sRoot = shareReq.list[0].path.split('/').slice(0, -1).join('/');
         }
-        else{
-            if(sRoot == ''){
-                sRoot = remotePathData.list[0].path.split('/').slice(0, -1).join('/') || '/';
+        const fileList = [];
+        for(const f of shareReq.list){
+            if(f.isdir == '1'){
+                const subList = await getRemotePath(shareUrl, f.path);
+                fileList.push(...subList);
             }
-            const fileList = [];
-            for(const f of remotePathData.list){
-                if(f.isdir == 1){
-                    const subList = await getRemotePaths(f.path);
-                    fileList.push(...subList);
-                }
-                else{
-                    fileList.push(f.path);
-                }
+            else{
+                fileList.push(f);
             }
-            return fileList;
         }
+        return fileList;
     }
     else{
-        console.log(':: Wrong remote path!');
         return [];
     }
-    
-    console.log();
 }
 
 async function addDownloads(fsList){
-    const getMeta = await app.getFileMeta(fsList);
-    
     // aria2c -x 16 -s 10 -j 4 -k 1M --enable-rpc --rpc-allow-origin-all=true --dir=D:/Downloads --rpc-secret=YOUR_ARIA2_RPC_SECRET
     // https://aria2.github.io/manual/en/html/aria2c.html#aria2.addUri
     
-    const jsonReq = { 
+    const jsonReq = {
         jsonrpc: '2.0',
         id: 'DOWNLOAD_ID',
         method: 'aria2.addUri',
@@ -122,7 +135,7 @@ async function addDownloads(fsList){
     };
     
     const rpcReq = [];
-    for(const [i, f] of getMeta.info.entries()){
+    for(const [i, f] of fsList.entries()){
         rpcReq.push(structuredClone(jsonReq));
         
         const folderName = f.path.split('/').slice(0, -1).join('/')
