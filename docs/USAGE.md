@@ -28,6 +28,12 @@ no options for this script
 -a "acc"           select account (by name from ".config.yaml")
 -r "/"             select remote directory
 ```
+### Download Shared Files via Aria2 RPC:
+**node "app-getdl-share.js" <options>**
+```
+-a "acc"           select account (by name from ".config.yaml")
+-s "gObGxQGxQGx"   input shared url
+```
 ### Fetch File Meta Information from Remote:
 **node "app-filemeta.js" <options>**
 ```
