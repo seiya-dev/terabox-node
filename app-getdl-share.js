@@ -93,7 +93,7 @@ async function getShareDL(argv_surl){
             fsList.push({
                 path: f.path,
                 server_filename: f.server_filename,
-                dlink: f.dlink,
+                dlink: f.dlink + '&origin=dlna',
             });
         }
         await addDownloads(fsList);
