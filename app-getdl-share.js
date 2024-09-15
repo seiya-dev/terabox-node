@@ -106,6 +106,7 @@ async function getRemotePath(shareUrl, remoteDir){
         if(sRoot == ''){
             sRoot = shareReq.list[0].path.split('/').slice(0, -1).join('/');
         }
+        console.log(':: Got Share:', shareUrl, stripPath(shareReq.title));
         const fileList = [];
         for(const f of shareReq.list){
             if(f.isdir == '1'){
@@ -123,6 +124,10 @@ async function getRemotePath(shareUrl, remoteDir){
     }
 }
 
+function stripPath(rPath){
+    return rPath.replace(sRoot, '').replace(new RegExp('^/'), '');
+}
+
 async function addDownloads(fsList){
     // aria2c -x 16 -s 10 -j 4 -k 1M --enable-rpc --rpc-allow-origin-all=true --dir=D:/Downloads --rpc-secret=YOUR_ARIA2_RPC_SECRET
     // https://aria2.github.io/manual/en/html/aria2c.html#aria2.addUri
@@ -138,9 +143,7 @@ async function addDownloads(fsList){
     for(const [i, f] of fsList.entries()){
         rpcReq.push(structuredClone(jsonReq));
         
-        const folderName = f.path.split('/').slice(0, -1).join('/')
-            .replace(sRoot, '')
-            .replace(new RegExp('^/'), '');
+        const folderName = stripPath(f.path.split('/').slice(0, -1).join('/'));
         
         rpcReq[i].id = crypto.randomUUID();
         rpcReq[i].params.push([f.dlink]);
@@ -155,7 +158,7 @@ async function addDownloads(fsList){
         });
         console.log('ADDING...');
         console.log('CODE:', req.statusCode);
-        console.log(await req.body.json());
+        // console.log(await req.body.json());
     }
     catch(error){
         error = new Error('aria2.addUri', { cause: error });

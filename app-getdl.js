@@ -108,6 +108,10 @@ async function getRemotePaths(remotePath){
     console.log();
 }
 
+function stripPath(rPath){
+    return rPath.replace(sRoot, '').replace(new RegExp('^/'), '');
+}
+
 async function addDownloads(fsList){
     const getMeta = await app.getFileMeta(fsList);
     
@@ -125,9 +129,7 @@ async function addDownloads(fsList){
     for(const [i, f] of getMeta.info.entries()){
         rpcReq.push(structuredClone(jsonReq));
         
-        const folderName = f.path.split('/').slice(0, -1).join('/')
-            .replace(sRoot, '')
-            .replace(new RegExp('^/'), '');
+        const folderName = stripPath(f.path.split('/').slice(0, -1).join('/'));
         
         rpcReq[i].id = crypto.randomUUID();
         rpcReq[i].params.push([f.dlink]);
@@ -142,7 +144,7 @@ async function addDownloads(fsList){
         });
         console.log('ADDING...');
         console.log('CODE:', req.statusCode);
-        console.log(await req.body.json());
+        // console.log(await req.body.json());
     }
     catch(error){
         error = new Error('aria2.addUri', { cause: error });

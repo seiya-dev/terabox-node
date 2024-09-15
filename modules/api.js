@@ -1,7 +1,8 @@
-import { DecoratorHandler, Agent, FormData, request } from 'undici';
+import { DecoratorHandler, Agent, FormData, Client, buildConnector, request } from 'undici';
 import { Cookie, CookieJar } from 'tough-cookie';
 import child_process from 'node:child_process';
 import { filesize } from 'filesize';
+import tls from 'node:tls';
 
 const TERABOX_UA = 'terabox;1.32.0.1;PC;PC-Windows;10.0.22631;WindowsTeraBox';
 const TERABOX_BASE_URL = 'https://www.terabox.com';
@@ -690,12 +691,24 @@ class TeraBoxApp {
         });
         
         try{
-            const curlReq = `curl -s -H "User-Agent: ${TERABOX_UA}" -H "Cookie: ${this.params.auth}" "${url.toString()}"`;
-            console.log('::', curlReq);
-            const resp = child_process.execSync(curlReq);
-            const result = resp.toString('utf8');
+            const connector = buildConnector({ ciphers: tls.DEFAULT_CIPHERS + ':!ECDHE-RSA-AES128-SHA' });
+            const client = new Client(TERABOX_BASE_URL, { connect: connector });
+            const req = await request(url, {
+                method: 'GET',
+                headers: {
+                    'User-Agent': TERABOX_UA,
+                    'Cookie': this.params.auth,
+                },
+                dispatcher: client,
+                signal: AbortSignal.timeout(TERABOX_TIMEOUT),
+            });
             
-            return JSON.parse(result);
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            return rdata;
         }
         catch (error) {
             throw new Error('shortUrlInfo', { cause: error });
@@ -721,12 +734,24 @@ class TeraBoxApp {
         }
         
         try{
-            const curlReq = `curl -s -H "User-Agent: ${TERABOX_UA}" -H "Cookie: ${this.params.auth}" "${url.toString()}"`;
-            console.log('::', curlReq);
-            const resp = child_process.execSync(curlReq);
-            const result = resp.toString('utf8');
+            const connector = buildConnector({ ciphers: tls.DEFAULT_CIPHERS + ':!ECDHE-RSA-AES128-SHA' });
+            const client = new Client(TERABOX_BASE_URL, { connect: connector });
+            const req = await request(url, {
+                method: 'GET',
+                headers: {
+                    'User-Agent': TERABOX_UA,
+                    'Cookie': this.params.auth,
+                },
+                dispatcher: client,
+                signal: AbortSignal.timeout(TERABOX_TIMEOUT),
+            });
             
-            return JSON.parse(result);
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            return rdata;
         }
         catch (error) {
             throw new Error('shortUrlList', { cause: error });
