@@ -4,9 +4,11 @@
 2. Open the browser's developer tools (F12).
 3. Go to the "Application" tab.
 4. Select the "Cookies" item in the left panel.
-5. Look for the "ndus" cookie value and copy it to ".config.yaml".
+5. Look for the "ndus" cookie value and copy it to "config/.config.yaml".
 
-For Downloading files using app-getdl.js you need Aria2 RPC server
+For Downloading files using app-getdl.js and app-getdl-share.js you need Aria2 RPC server
+
+## "config/.config.yaml" example
 
 ```yaml
 accounts:
