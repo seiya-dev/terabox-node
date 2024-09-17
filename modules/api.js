@@ -1,7 +1,8 @@
 import { DecoratorHandler, Agent, FormData, Client, buildConnector, request } from 'undici';
 import { Cookie, CookieJar } from 'tough-cookie';
-import child_process from 'node:child_process';
 import { filesize } from 'filesize';
+
+import child_process from 'node:child_process';
 import tls from 'node:tls';
 
 const TERABOX_UA = 'terabox;1.32.0.1;PC;PC-Windows;10.0.22631;WindowsTeraBox';
@@ -244,7 +245,6 @@ class TeraBoxApp {
         });
         
         const formData = new FormUrlEncoded();
-        // formData.append('method', 'list');
         formData.append('order', 'name');
         formData.append('desc', 0);
         formData.append('dir', remoteDir);
@@ -715,7 +715,7 @@ class TeraBoxApp {
         }
     }
     
-    async shortUrlList(shareId, remoteDir, page = 1){ // Untested API
+    async shortUrlList(shareId, remoteDir, page = 1){
         remoteDir = remoteDir || ''
         const url = new URL(TERABOX_BASE_URL + '/share/list');
         url.search = new URLSearchParams({
@@ -758,7 +758,7 @@ class TeraBoxApp {
         }
     }
     
-    async fileDiff(){ // Untested API
+    async fileDiff(){
         const formData = new FormUrlEncoded();
         formData.append('cursor', this.params.cursor);
         if(this.params.cursor == 'null'){
@@ -819,7 +819,7 @@ class TeraBoxApp {
         }
     }
     
-    async genPanToken(){ // Untested API
+    async genPanToken(){
         const url = new URL(TERABOX_BASE_URL + '/api/pantoken');
         url.search = new URLSearchParams({
             ...TERABOX_APP_PARAMS,
