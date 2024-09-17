@@ -44,6 +44,35 @@ class FormUrlEncoded {
     }
 }
 
+function sign(s1, s2) {
+    const p = new Uint8Array(256);
+    const a = new Uint8Array(256);
+    const result = [];
+    
+    Array.from({ length: 256 }, (_, i) => {
+        a[i] = s1.charCodeAt(i % s1.length);
+        p[i] = i;
+    });
+    
+    let j = 0;
+    Array.from({ length: 256 }, (_, i) => {
+        j = (j + p[i] + a[i]) % 256;
+        [p[i], p[j]] = [p[j], p[i]]; // swap
+    });
+    
+    let i = 0, j = 0;
+    Array.from({ length: s2.length }, (_, q) => {
+        i = (i + 1) % 256;
+        j = (j + p[i]) % 256;
+        [p[i], p[j]] = [p[j], p[i]]; // swap
+        const k = p[(p[i] + p[j]) % 256];
+        result.push(s2.charCodeAt(q) ^ k);
+    });
+    
+    return Buffer.from(result).toString('base64');
+}
+
+
 class TeraBoxApp {
     data = {
         csrf: '',
@@ -869,6 +898,11 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
+            
+            if(rdata.errno == 0){
+                rdata.data.signb = sign(rdata.data.sign1, rdata.data.sign3);
+            }
+            
             return rdata;
         }
         catch (error) {
