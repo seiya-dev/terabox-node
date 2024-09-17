@@ -54,6 +54,12 @@ async function getShareDL(argv_surl){
     
     app = new TeraBoxApp(cur_acc);
     
+    const acc_check = await app.checkLogin();
+    if(acc_check.errno != 0){
+        console.error('[ERROR] "ndus" cookie is BAD!');
+        return;
+    }
+    
     const tbUrl = argv_surl ? argv_surl : await input({ message: 'Share URL/SURL:' });
     const regexRUrl = /^\/s\/1([A-Za-z0-9_-]+)$/;
     const regexSUrl = /^[A-Za-z0-9_-]+$/;
