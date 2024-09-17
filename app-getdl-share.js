@@ -31,6 +31,27 @@ if(yargs.getArgv('help')){
 
 (async () => {
     try{
+        if(!config.accounts){
+            console.error('[ERROR] Accounts not set!');
+            return;
+        }
+        
+        let cur_acc;
+        if(yargs.getArgv('a')){
+            cur_acc = config.accounts[yargs.getArgv('a')];
+        }
+        else{
+            cur_acc = await selectAccount(config);
+        }
+        
+        app = new TeraBoxApp(cur_acc);
+        
+        const acc_check = await app.checkLogin();
+        if(acc_check.errno != 0){
+            console.error('[ERROR] "ndus" cookie is BAD!');
+            return;
+        }
+        
         await getShareDL(yargs.getArgv('s'));
     }
     catch(error){
@@ -38,28 +59,7 @@ if(yargs.getArgv('help')){
     }
 })();
 
-async function getShareDL(argv_surl){
-    if(!config.accounts){
-        console.error('[ERROR] Accounts not set!');
-        return;
-    }
-
-    let cur_acc;
-    if(yargs.getArgv('a')){
-        cur_acc = config.accounts[yargs.getArgv('a')];
-    }
-    else{
-        cur_acc = await selectAccount(config);
-    }
-    
-    app = new TeraBoxApp(cur_acc);
-    
-    const acc_check = await app.checkLogin();
-    if(acc_check.errno != 0){
-        console.error('[ERROR] "ndus" cookie is BAD!');
-        return;
-    }
-    
+async function getShareDL(argv_surl){    
     const tbUrl = argv_surl ? argv_surl : await input({ message: 'Share URL/SURL:' });
     const regexRUrl = /^\/s\/1([A-Za-z0-9_-]+)$/;
     const regexSUrl = /^[A-Za-z0-9_-]+$/;
