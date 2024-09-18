@@ -1,8 +1,17 @@
 {
-    "name": "terabox-app-js",
+    "name": "terabox-app",
     "name_ext": "Terabox App",
     "version": "2.2.0",
-    "main": "app.js",
+    "main": "modules/api.js",
+    "type": "module",
+    "bin": {
+        "tb-check": "app/app-check.js",
+        "tb-filemeta": "app/app-filemeta.js",
+        "tb-getdl": "app/app-getdl.js",
+        "tb-getdl-share": "app/app-getdl-share.js",
+        "tb-mktbhash": "app/app-mktbhash.js",
+        "tb-uploader": "app/app-uploader.js"
+    },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
@@ -11,8 +20,7 @@
     ],
     "author": "Seiya Dev.",
     "license": "MIT",
-    "description": "",
-    "type": "module",
+    "description": "NodeJS tool for interacting with the TeraBox cloud service without the need to use the website or app ☁️",
     "dependencies": {
         "@inquirer/input": "^2.3.0",
         "@inquirer/select": "^2.5.0",
