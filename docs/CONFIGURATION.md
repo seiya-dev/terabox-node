@@ -1,4 +1,14 @@
 ## Configuration
+Install GIT, NodeJS (v.20+) and PNPM.
+
+```
+git clone --depth 1 --branch 2.3.0 https://github.com/seiya-dev/terabox-app
+cd terabox-app
+pnpm i
+pnpm link .
+```
+
+## Auth cookies
 
 1. Open your Terabox cloud.
 2. Open the browser's developer tools (F12).

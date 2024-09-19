@@ -60,7 +60,7 @@ function sign(s1, s2) {
         [p[i], p[j]] = [p[j], p[i]]; // swap
     });
     
-    let i = 0, j = 0;
+    let i = 0; j = 0;
     Array.from({ length: s2.length }, (_, q) => {
         i = (i + 1) % 256;
         j = (j + p[i]) % 256;

@@ -1,7 +1,7 @@
 {
     "name": "terabox-app",
     "name_ext": "Terabox App",
-    "version": "2.2.0",
+    "version": "2.3.0",
     "main": "modules/api.js",
     "type": "module",
     "bin": {
@@ -9,7 +9,7 @@
         "tb-filemeta": "app/app-filemeta.js",
         "tb-getdl": "app/app-getdl.js",
         "tb-getdl-share": "app/app-getdl-share.js",
-        "tb-mktbhash": "app/app-mktbhash.js",
+        "tb-mkhash": "app/app-mktbhash.js",
         "tb-uploader": "app/app-uploader.js"
     },
     "scripts": {
