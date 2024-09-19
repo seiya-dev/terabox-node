@@ -8,7 +8,7 @@
 no options for this script
 ```
 ### Upload Folders/Files:
-**tb-uploader <options>**
+**tb-upload <options>**
 ```
 -a "acc"           select account (by name from ".config.yaml")
 -l "/"             select local directory
