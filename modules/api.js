@@ -83,7 +83,8 @@ class TeraBoxApp {
         jsToken: '', 
     };
     params = {
-        domain: TERABOX_BASE_URL,
+        whost: TERABOX_BASE_URL,
+        // uhost: TERABOX_BASE_URL.replace('www', 'c-jp'),
         app: TERABOX_APP_PARAMS,
         ua: TERABOX_UA,
         auth: '',
@@ -501,6 +502,30 @@ class TeraBoxApp {
         }
     }
     
+    async getUploadHost(){
+        const url = new URL(TERABOX_BASE_URL + '/rest/2.0/pcs/file?method=locateupload');
+        try{
+            const req = await request(url, {
+                headers: {
+                    'User-Agent': TERABOX_UA,
+                    'Cookie': this.params.auth,
+                },
+                signal: AbortSignal.timeout(TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            this.params.uhost = rdata.host;
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('getUploadHost', { cause: error });
+        }
+    }
+    
     async uploadChunk(data, partseq, chunk, onBodySentHandler, externalAbort) {
         // preconfig request
         externalAbort = externalAbort ? externalAbort : new AbortController().signal;
@@ -529,7 +554,18 @@ class TeraBoxApp {
         const dispatcher = new Agent().compose(undiciInterceptor);
         // --
         
-        const url = new URL(TERABOX_BASE_URL.replace('www', 'c-jp') + '/rest/2.0/pcs/superfile2');
+        let upload_url = '';
+        try{
+            if(typeof this.params.uhost != 'string' || this.params.uhost == ''){
+                throw new Error();
+            }
+            upload_host = new URL(`https://${this.params.uhost}/rest/2.0/pcs/superfile2`);
+        }
+        catch(e){
+            upload_host = new URL(`${TERABOX_BASE_URL.replace('www', 'c-jp')}/rest/2.0/pcs/superfile2`);
+        }
+        
+        const url = upload_host;
         url.search = new URLSearchParams({
             method: 'upload',
             ...TERABOX_APP_PARAMS,
