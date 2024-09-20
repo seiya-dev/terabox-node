@@ -25,7 +25,7 @@ class FormUrlEncoded {
     constructor(params) {
         this.data = new URLSearchParams();
         if(typeof params === 'object' && params !== null){
-            for (const [key, value] of Object.entries(params)) {
+            for (const [key, value] of params.entries()) {
                 this.data.append(key, value);
             }
         }
@@ -943,6 +943,46 @@ class TeraBoxApp {
         }
         catch (error) {
             throw new Error('getHomeInfo', { cause: error });
+        }
+    }
+    
+    async download(fs_ids, signb){
+        const url = new URL(TERABOX_BASE_URL + '/api/download');
+        
+        const formData = new FormUrlEncoded();
+        for(const [k, v] of TERABOX_APP_PARAMS.entries()){
+             formData.append(k, v);
+        }
+        formData.append('jsToken', this.data.jsToken);
+        formData.append('fidlist', JSON.stringify(fs_ids));
+        formData.append('type', 'dlink');
+        formData.append('vip', 2); // this.params.vip_type
+        formData.append('sign', signb); // base64 sign from getHomeInfo
+        formData.append('timestamp', Math.round(Date.now()/1000));
+        formData.append('bdstoken', this.data.bdstoken);
+        
+        try{
+            const req = await request(url, {
+                method: 'POST',
+                body: formData.str(),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': TERABOX_UA,
+                    'Cookie': this.params.auth,
+                },
+                signal: AbortSignal.timeout(TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('download', { cause: error });
         }
     }
     
