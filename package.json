@@ -1,7 +1,7 @@
 {
-    "name": "terabox-app",
-    "name_ext": "Terabox App",
-    "version": "2.3.0",
+    "name": "terabox-node",
+    "name_ext": "TeraBox node",
+    "version": "2.3.1",
     "main": "modules/api.js",
     "type": "module",
     "bin": {

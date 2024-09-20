@@ -2,8 +2,8 @@
 Install GIT, NodeJS (v.20+) and PNPM.
 
 ```
-git clone --depth 1 --branch <version> https://github.com/seiya-dev/terabox-app
-cd terabox-app
+git clone --depth 1 --branch <version> https://github.com/seiya-dev/terabox-node
+cd terabox-node
 pnpm i
 pnpm link -g
 ```
@@ -16,7 +16,7 @@ pnpm link -g
 4. Select the "Cookies" item in the left panel.
 5. Look for the "ndus" cookie value and copy it to "config/.config.yaml".
 
-For Downloading files using app-getdl.js and app-getdl-share.js you need Aria2 RPC server
+For Downloading files using tb-getdl and tb-getdl-share you need Aria2 RPC server
 
 ## "config/.config.yaml" example
 
