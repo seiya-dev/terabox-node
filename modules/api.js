@@ -554,7 +554,7 @@ class TeraBoxApp {
         const dispatcher = new Agent().compose(undiciInterceptor);
         // --
         
-        let upload_url = '';
+        let upload_host;
         try{
             if(typeof this.params.uhost != 'string' || this.params.uhost == ''){
                 throw new Error();
