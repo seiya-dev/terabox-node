@@ -13,7 +13,7 @@ const TERABOX_APP_PARAMS = {
     app_id: 250528,
     web: 1,
     channel: 'dubox',
-    clienttype: 0,
+    clienttype: 0, // 5 is wap?
 };
 
 function makeRemoteFPath(sdir, sfile){
@@ -306,7 +306,7 @@ class TeraBoxApp {
         }
     }
     
-    async getRecycleDir(){
+    async getRecycleBin(){
         const url = new URL(TERABOX_BASE_URL + '/api/recycle/list');
         url.search = new URLSearchParams({
             ...TERABOX_APP_PARAMS,
@@ -334,11 +334,11 @@ class TeraBoxApp {
             return rdata;
         }
         catch (error) {
-            throw new Error('getRecycleDir', { cause: error });
+            throw new Error('getRecycleBin', { cause: error });
         }
     }
     
-    async clearRecycleDir(){
+    async clearRecycleBin(){
         const url = new URL(TERABOX_BASE_URL + '/api/recycle/clear');
         url.search = new URLSearchParams({
             ...TERABOX_APP_PARAMS,
@@ -363,7 +363,7 @@ class TeraBoxApp {
             return rdata;
         }
         catch (error) {
-            throw new Error('clearRecycleDir', { cause: error });
+            throw new Error('clearRecycleBin', { cause: error });
         }
     }
     
@@ -404,10 +404,10 @@ class TeraBoxApp {
     async precreateFile(data){
         const formData = new FormUrlEncoded();
         formData.append('path', makeRemoteFPath(data.remote_dir, data.file));
-        formData.append('size', data.size);
-        formData.append('isdir', 0);
-        formData.append('block_list', JSON.stringify(data.hash.chunks));
+        // formData.append('target_path', data.remote_dir);
         formData.append('autoinit', 1);
+        formData.append('size', data.size);
+        formData.append('block_list', JSON.stringify(data.hash.chunks));
         formData.append('rtype', 2);
         if(data.upload_id && typeof data.upload_id == 'string' && data.upload_id != ''){
             formData.append('uploadid', data.upload_id);
@@ -418,7 +418,8 @@ class TeraBoxApp {
         // formData.append('local_ctime', '');
         // formData.append('local_mtime', '');
         
-        const url = new URL(TERABOX_BASE_URL + '/api/precreate');
+        const api_prefix = data.is_teratransfer ? 'a' : '';
+        const url = new URL(TERABOX_BASE_URL + `/api/${api_prefixurl}precreate`);
         url.search = new URLSearchParams({
             ...TERABOX_APP_PARAMS,
             jsToken: this.data.jsToken,
@@ -575,6 +576,10 @@ class TeraBoxApp {
             partseq: partseq,
         });
         
+        if(data.is_teratransfer){
+            url.searchParams.append('useteratransfer', '1')
+        }
+        
         const formData = new FormData();
         formData.append('file', chunk);
 
@@ -655,6 +660,7 @@ class TeraBoxApp {
     async createFile(data) {
         const formData = new FormUrlEncoded();
         formData.append('path', makeRemoteFPath(data.remote_dir, data.file));
+        // formData.append('isdir', 0);
         formData.append('size', data.size);
         formData.append('isdir', 0);
         formData.append('block_list', JSON.stringify(data.hash.chunks));;
@@ -668,7 +674,8 @@ class TeraBoxApp {
         // formData.append('mode', 2); // 2 is Batch Upload
         // formData.append('exif_info', exifJsonStr);
         
-        const url = new URL(TERABOX_BASE_URL + '/api/create');
+        const api_prefix = data.is_teratransfer ? 'anno' : '';
+        const url = new URL(TERABOX_BASE_URL + `/api/${api_prefix}create`);
         url.search = new URLSearchParams({
             ...TERABOX_APP_PARAMS,
             jsToken: this.data.jsToken,
