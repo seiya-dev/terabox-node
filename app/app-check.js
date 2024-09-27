@@ -34,7 +34,7 @@ if(yargs.getArgv('help')){
     }
     
     if(yargs.getArgv('a')){
-        await getAcc(yargs.getArgv('a'));
+        await getAcc(yargs.getArgv('a'), true);
     }
     else{
         console.log('\n[INFO] Total Accounts:', Object.keys(config.accounts).length)
@@ -44,7 +44,7 @@ if(yargs.getArgv('help')){
     }
 })();
 
-async function getAcc(acc){
+async function getAcc(acc, showCoinsCount){
     console.info('\n[INFO] Account Info:', acc);
     app = new TeraBoxApp(config.accounts[acc]);
     const acc_check = await app.checkLogin();
@@ -53,4 +53,9 @@ async function getAcc(acc){
         return;
     }
     await showAccountInfo(app);
+    
+    if(showCoinsCount){
+        const coins = await app.getCoinsCount();
+        console.log('[INFO] Total coins:', coins.data.can_used_cnt);
+    }
 }

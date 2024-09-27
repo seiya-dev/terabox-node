@@ -267,6 +267,30 @@ class TeraBoxApp {
         }
     }
     
+    async getCoinsCount(){
+        const url = new URL(TERABOX_BASE_URL + '/rest/1.0/inte/system/getrecord');
+        
+        try{
+            const req = await request(url, {
+                headers: {
+                    'User-Agent': TERABOX_UA,
+                    'Cookie': this.params.auth,
+                },
+                signal: AbortSignal.timeout(TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('getCoinsCount', { cause: error });
+        }
+    }
+    
     async getRemoteDir(remoteDir, page = 1){
         const url = new URL(TERABOX_BASE_URL + '/api/list');
         url.search = new URLSearchParams({
