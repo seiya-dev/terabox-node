@@ -19,9 +19,14 @@ https://www.terabox.com/login?from=pc&lang=en&show_third_login=1
 https://www.terabox.com/share/teratransfer/sharelist?app_id=250528&web=1&channel=dubox&clienttype=0&page=1&page_size=10
 https://www.staticcc.com/fe-opera-static/node-static-v4/fe-webv4-main/js/login.71e8269f.js
 https://www.terabox.fun/wap/outlogin/login?type=2&redirectUrl=https%3A%2F%2Fwww.terabox.fun%2F
+https://www.terabox.com/closeAccount
+https://www.terabox.com/clearData
 https://www.terabox.com/login/accountbinding
 https://www.terabox.com/wap/glodminer?show_type=3
 https://www.terabox.com/wap/commercial/taskcenter
+https://www.terabox.com/wap/commercial/taskcenter?version=3.34.1
+https://www.terabox.com/wap/taskcenter/signin
+https://www.terabox.com/wap/taskcenter/game-center
 https://www.terabox.com/wap/commercial/spacelist
 https://www.terabox.com/wap/commercial/space
 https://www.terabox.com/wap/commercial
@@ -30,6 +35,14 @@ https://www.terabox.com/wap/hylogin/login
 https://www.terabox.com/wap/coins
 https://www.terabox.com/wap/activity
 https://www.terabox.app/sharing/link?surl=
+
+https://www.terabox.com/rest/recent/listall?version=3
+
+curl -H "Cookie: ndus=..." "https://www.terabox.com/api/userdata/delete?app_id=250528&web=1&client=web&channel=dubox&clienttype=5&psign=0&type=%5B1%2C2%5D"
+
+curl -H "Cookie: ndus=..."
+  -X POST "https://terabox.com/passport/account/modify"
+  -d "client=android&pass_version=2.0&devuid=?&psign=?&uname=TeraBox"
 
 https://www.terabox.com/passport/prelogin?
     ...TERABOX_APP_PARAMS

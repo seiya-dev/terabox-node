@@ -442,7 +442,7 @@ class TeraBoxApp {
         // formData.append('local_ctime', '');
         // formData.append('local_mtime', '');
         
-        const api_prefix = data.is_teratransfer ? 'a' : '';
+        const api_prefixurl = data.is_teratransfer ? 'a' : '';
         const url = new URL(TERABOX_BASE_URL + `/api/${api_prefixurl}precreate`);
         url.search = new URLSearchParams({
             ...TERABOX_APP_PARAMS,
@@ -698,8 +698,8 @@ class TeraBoxApp {
         // formData.append('mode', 2); // 2 is Batch Upload
         // formData.append('exif_info', exifJsonStr);
         
-        const api_prefix = data.is_teratransfer ? 'anno' : '';
-        const url = new URL(TERABOX_BASE_URL + `/api/${api_prefix}create`);
+        const api_prefixurl = data.is_teratransfer ? 'anno' : '';
+        const url = new URL(TERABOX_BASE_URL + `/api/${api_prefixurl}create`);
         url.search = new URLSearchParams({
             ...TERABOX_APP_PARAMS,
             jsToken: this.data.jsToken,
