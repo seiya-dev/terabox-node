@@ -5,6 +5,7 @@ import { filesize } from 'filesize';
 import child_process from 'node:child_process';
 import tls from 'node:tls';
 
+const TERABOX_VER_MOBILE = 4;
 const TERABOX_UA = 'terabox;1.32.0.1;PC;PC-Windows;10.0.22631;WindowsTeraBox';
 const TERABOX_BASE_URL = 'https://www.terabox.com';
 const TERABOX_UI_LANG = 'en';
@@ -71,7 +72,6 @@ function sign(s1, s2) {
     
     return Buffer.from(result).toString('base64');
 }
-
 
 class TeraBoxApp {
     data = {
@@ -1047,6 +1047,39 @@ class TeraBoxApp {
         }
         catch (error) {
             throw new Error('getFileMeta', { cause: error });
+        }
+    }
+    
+    async getRecentUploads(page = 1){
+        const url = new URL(TERABOX_BASE_URL + '/rest/recent/listall');
+        url.search = new URLSearchParams({
+            ...TERABOX_APP_PARAMS,
+            version:  TERABOX_VER_MOBILE,
+            // num: 20000, ???
+            // page: page, ???
+        });
+        
+        try{
+            const req = await request(url, {
+                method: 'GET',
+                body: formData.str(),
+                headers: {
+                    'User-Agent': TERABOX_UA,
+                    'Cookie': this.params.auth,
+                },
+                signal: AbortSignal.timeout(TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('getRecentUploads', { cause: error });
         }
     }
 }
