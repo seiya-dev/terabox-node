@@ -47,8 +47,7 @@ async function showAccountInfo(app){
     const acc_data = await app.getAccountData();
     const acc_quota = await app.getQuota();
     
-    const reg_country = acc_data.data.reg_country.name;
-    console.info('[INFO] USER:', acc_info.data.display_name, '/ Reg Country:', reg_country);
+    console.info('[INFO] USER:', acc_info.data.display_name);
     
     const spaceUsed = filesize(acc_quota.used, {standard: 'iec', round: 3, pad: true});
     const spaceTotal = filesize(acc_quota.total, {standard: 'iec', round: 3, pad: true});

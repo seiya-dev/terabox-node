@@ -10,13 +10,14 @@ pnpm link -g
 
 ## Auth cookies
 
-1. Open your Terabox cloud.
+0. Open your Terabox cloud.
+1. [Login into account](https://www.terabox.com/wap/outlogin).
 2. Open the browser's developer tools (F12).
 3. Go to the "Application" tab.
 4. Select the "Cookies" item in the left panel.
 5. Look for the "ndus" cookie value and copy it to "config/.config.yaml".
 
-For Downloading files using tb-getdl and tb-getdl-share you need Aria2 RPC server
+For downloading files using tb-getdl and tb-getdl-share you need Aria2 RPC server
 
 ## "config/.config.yaml" example
 
