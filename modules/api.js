@@ -179,7 +179,7 @@ class TeraBoxApp {
         catch(error){
             if (retries > 0) {
                 await new Promise(resolve => setTimeout(resolve, 1000));
-                return doReq(req_url, req_options, req_headers, retries - 1);
+                return this.doReq(req_url, req_options, req_headers, retries - 1);
             }
             throw new Error('doReq', { cause: error });
         }
