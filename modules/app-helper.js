@@ -13,6 +13,10 @@ import YAML from 'yaml';
 const maxTasks = 10;
 const maxTries = 5;
 
+async function delay(ms){
+    await new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function loadYaml(file){
     try{
         const data = fs.readFileSync(file, 'utf8');
@@ -456,6 +460,7 @@ function unwrapErrorMessage(err) {
 }
 
 export {
+    delay,
     loadYaml,
     saveYaml,
     selectAccount,
