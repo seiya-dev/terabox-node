@@ -157,6 +157,34 @@ class TeraBoxApp {
         }
     }
     
+    async doReq(req_url, req_options = {}, req_headers = {}, retries = 5){
+        const url = new URL(TERABOX_BASE_URL + req_url);
+        
+        try {
+            const options = {
+                headers: {
+                    'User-Agent': TERABOX_UA,
+                    'Cookie': this.params.auth,
+                    ...req_headers,
+                },
+                signal: AbortSignal.timeout(TERABOX_TIMEOUT),
+                ...req_options,
+            };
+            
+            const req = await request(url, options);
+            
+            const rdata = await req.body.json();
+            return rdata;
+        }
+        catch(error){
+            if (retries > 0) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                return doReq(req_url, req_options, req_headers, retries - 1);
+            }
+            throw new Error('doReq', { cause: error });
+        }
+    }
+    
     async checkLogin(){
         const url = new URL(TERABOX_BASE_URL + '/api/check/login');
         

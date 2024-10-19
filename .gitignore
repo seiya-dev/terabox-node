@@ -2,6 +2,7 @@ _upload_test
 node_modules
 .config.json
 .config.yaml
+testapp*
 *.mkv
 *.7z
 *.pdf
