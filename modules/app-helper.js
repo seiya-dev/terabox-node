@@ -14,6 +14,9 @@ const maxTasks = 10;
 const maxTries = 5;
 
 async function delay(ms){
+    if(ms < 1){
+        return;
+    }
     await new Promise(resolve => setTimeout(resolve, ms));
 }
 
