@@ -112,7 +112,11 @@ async function getRemotePath(shareUrl, remoteDir){
         if(sRoot == ''){
             sRoot = shareReq.list[0].path.split('/').slice(0, -1).join('/');
         }
-        console.log(':: Got Share:', shareUrl, stripPath(shareReq.title));
+        remoteDir = stripPath(remoteDir || '', true);
+        if(shareReq.title){
+            remoteDir = `GET: ${stripPath(shareReq.title)}`;
+        }
+        console.log(':: Got Share:', shareUrl, remoteDir);
         const fileList = [];
         for(const f of shareReq.list){
             if(f.isdir == '1'){
@@ -130,8 +134,8 @@ async function getRemotePath(shareUrl, remoteDir){
     }
 }
 
-function stripPath(rPath){
-    return rPath.replace(sRoot, '').replace(new RegExp('^/'), '');
+function stripPath(rPath, rootFlag){
+    return (rootFlag ? 'root/' : '') + rPath.replace(sRoot, '').replace(new RegExp('^/'), '');
 }
 
 async function addDownloads(fsList){
