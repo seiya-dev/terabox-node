@@ -129,7 +129,13 @@ async function getRemotePath(shareUrl, remoteDir){
         }
         return fileList;
     }
+    else if(shareReq.errno == 2130){
+        console.log('[ERROR] Share folder was deleted or removed.');
+        return [];
+    }
     else{
+        console.log('[ERROR] Unknown Error.');
+        console.log(shareReq);
         return [];
     }
 }
@@ -171,7 +177,8 @@ async function addDownloads(fsList){
         // console.log(await req.body.json());
     }
     catch(error){
-        error = new Error('aria2.addUri', { cause: error });
+        error = new Error('[ERROR] aria2.addUri', { cause: error });
         console.error(error);
+        console.log('[RPC-REQ]', rpcReq);
     }
 }
