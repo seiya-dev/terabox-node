@@ -21,7 +21,7 @@ const config = loadYaml(path.resolve(__dirname, '../config/.config.yaml'));
 const meta = loadYaml(path.resolve(__dirname, '../package.json'));
 
 console.log(`[INFO] ${meta.name_ext} v${meta.version} (GetShareDL Module)`);
-let sRoot = '';
+let rootPath = '';
 
 const yargs = new Argv(config, ['a','s']);
 if(yargs.getArgv('help')){
@@ -92,56 +92,72 @@ async function getShareDL(argv_surl){
     }
     
     await app.updateAppData();
-    const sFsList = await getRemotePath(shareUrl, '');
+    const shareInfo = await app.shortUrlInfo(shareUrl);
+    
+    let sFsList = [];
+    if(shareInfo.errno == 0){
+        if(shareInfo.fcount > 0){
+            sFsList = await getRemotePath(shareUrl, '');
+        }
+    }
+    else{
+        console.error(`[ERROR] Error #${shareInfo.errno}. BAD Share URL.`);
+        return;
+    }
+    
     if(sFsList.length > 0){
         const fsList = [];
         for(const f of sFsList){
             fsList.push({
                 path: f.path,
-                server_filename: f.server_filename,
+                filename: f.server_filename,
                 dlink: f.dlink + '&origin=dlna',
             });
         }
         await addDownloads(fsList);
+        return;
     }
+    
+    console.log('[INFO] No files in shared folder!');
 };
 
 async function getRemotePath(shareUrl, remoteDir){
     const shareReq = await app.shortUrlList(shareUrl, remoteDir);
     if(shareReq.errno == 0){
-        if(sRoot == ''){
-            sRoot = shareReq.list[0].path.split('/').slice(0, -1).join('/');
+        remoteDir = stripPath(remoteDir || '', 'root');
+        if(shareReq.title && shareReq.list.length > 1){
+            remoteDir = `init/${shareReq.list.length} Files`;
         }
-        remoteDir = stripPath(remoteDir || '', true);
-        if(shareReq.title){
-            remoteDir = `GET: ${stripPath(shareReq.title)}`;
+        if(shareReq.title && shareReq.list.length == 1){
+            shareReq.title = shareReq.title.split('/').at(-1);
+            remoteDir = `init/${shareReq.title}`;
         }
         console.log(':: Got Share:', shareUrl, remoteDir);
+        
         const fileList = [];
         for(const f of shareReq.list){
+            if(shareReq.title){
+                rootPath = f.path.split('/').slice(0, -1).join('/');
+            }
             if(f.isdir == '1'){
                 const subList = await getRemotePath(shareUrl, f.path);
                 fileList.push(...subList);
             }
             else{
+                f.path = stripPath(f.path.split('/').slice(0, -1).join('/'));
+                console.log('[INFO] addedFile:', 'root/' + (f.path?f.path+'/':'') + f.server_filename);
                 fileList.push(f);
             }
         }
         return fileList;
     }
-    else if(shareReq.errno == 2130){
-        console.log('[ERROR] Share folder was deleted or removed.');
-        return [];
-    }
     else{
-        console.log('[ERROR] Unknown Error.');
-        console.log(shareReq);
         return [];
     }
 }
 
-function stripPath(rPath, rootFlag){
-    return (rootFlag ? 'root/' : '') + rPath.replace(sRoot, '').replace(new RegExp('^/'), '');
+function stripPath(rPath, rootDir){
+    return (rootDir ? `${rootDir}/` : '') + rPath.replace(rootPath, '').replace(new RegExp('^/'), '');
 }
 
 async function addDownloads(fsList){
@@ -158,12 +174,9 @@ async function addDownloads(fsList){
     const rpcReq = [];
     for(const [i, f] of fsList.entries()){
         rpcReq.push(structuredClone(jsonReq));
-        
-        const folderName = stripPath(f.path.split('/').slice(0, -1).join('/'));
-        
         rpcReq[i].id = crypto.randomUUID();
         rpcReq[i].params.push([f.dlink]);
-        rpcReq[i].params.push({ 'user-agent': app.params.ua, out: (folderName?folderName+'/':'') + f.server_filename });
+        rpcReq[i].params.push({ 'user-agent': app.params.ua, out: (f.path?f.path+'/':'') + f.filename });
     }
     
     try{
@@ -177,8 +190,8 @@ async function addDownloads(fsList){
         // console.log(await req.body.json());
     }
     catch(error){
-        error = new Error('[ERROR] aria2.addUri', { cause: error });
-        console.error(error);
+        // error = new Error('[ERROR] aria2.addUri', { cause: error });
+        console.error('[ERROR] aria2.addUri:', error.code);
         // console.log('[RPC-REQ]', rpcReq);
     }
 }
