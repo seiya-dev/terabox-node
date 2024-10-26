@@ -179,6 +179,6 @@ async function addDownloads(fsList){
     catch(error){
         error = new Error('[ERROR] aria2.addUri', { cause: error });
         console.error(error);
-        console.log('[RPC-REQ]', rpcReq);
+        // console.log('[RPC-REQ]', rpcReq);
     }
 }
