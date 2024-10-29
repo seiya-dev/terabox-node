@@ -174,6 +174,8 @@ class TeraBoxApp {
         
         const save_cookies = reqm_options.save_cookies;
         delete reqm_options.save_cookies;
+        const silent_retry = reqm_options.silent_retry;
+        delete reqm_options.silent_retry;
         const req_timeout = reqm_options.timeout ? reqm_options.timeout : TERABOX_TIMEOUT;
         delete reqm_options.timeout;
         
@@ -208,7 +210,9 @@ class TeraBoxApp {
         catch(error){
             if (retries > 0) {
                 await new Promise(resolve => setTimeout(resolve, 500));
-                console.error('[ERROR] DoReq:', req_url, '|', error.code, ':', error.message, '(retrying...)');
+                if(!silent_retry){
+                    console.error('[ERROR] DoReq:', req_url, '|', error.code, ':', error.message, '(retrying...)');
+                }
                 return await this.doReq(req_url, req_options, retries - 1);
             }
             throw new Error('doReq', { cause: error });
