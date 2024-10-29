@@ -162,7 +162,7 @@ class TeraBoxApp {
         }
     }
     
-    async doReq(req_url, req_options = {}, retries = 5){
+    async doReq(req_url, req_options = {}, retries = 4){
         const url = new URL(TERABOX_BASE_URL + req_url);
         let reqm_options = structuredClone(req_options);
         let req_headers = {};
