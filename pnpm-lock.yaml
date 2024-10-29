@@ -20,6 +20,9 @@ importers:
       filesize:
         specifier: ^10.1.6
         version: 10.1.6
+      qrcode-terminal:
+        specifier: ^0.12.0
+        version: 0.12.0
       tough-cookie:
         specifier: ^5.0.0
         version: 5.0.0
@@ -121,6 +124,10 @@ packages:
   mute-stream@1.0.0:
     resolution: {integrity: sha512-avsJQhyd+680gKXyG/sQc0nXaC6rBkPOfyHYcFb9+hdkqQkR9bdnkJ0AMZhke0oesPqIO+mFFJ+IdBc7mst4IA==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+
+  qrcode-terminal@0.12.0:
+    resolution: {integrity: sha512-EXtzRZmC+YGmGlDFbXKxQiMZNwCLEO6BANKXG4iCtSIM0yqc/pappSx3RIKr4r0uh5JsBckOXeKrB3Iz7mdQpQ==}
+    hasBin: true
 
   require-directory@2.1.1:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
@@ -275,6 +282,8 @@ snapshots:
   is-fullwidth-code-point@3.0.0: {}
 
   mute-stream@1.0.0: {}
+
+  qrcode-terminal@0.12.0: {}
 
   require-directory@2.1.1: {}
 

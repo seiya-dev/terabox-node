@@ -74,6 +74,8 @@ function sign(s1, s2) {
 }
 
 class TeraBoxApp {
+    FormUrlEncoded = FormUrlEncoded;
+    
     data = {
         csrf: '',
         lang: TERABOX_UI_LANG,
@@ -113,6 +115,9 @@ class TeraBoxApp {
             if(req.headers['set-cookie']){
                 const cJar = new CookieJar();
                 this.params.auth.split(';').map(cookie => cJar.setCookieSync(cookie, TERABOX_BASE_URL));
+                if(typeof req.headers['set-cookie'] == 'string'){
+                    req.headers['set-cookie'] = [req.headers['set-cookie']];
+                }
                 for(const cookie of req.headers['set-cookie']){
                     cJar.setCookieSync(cookie.split('; ')[0], TERABOX_BASE_URL);
                 }
@@ -157,8 +162,20 @@ class TeraBoxApp {
         }
     }
     
-    async doReq(req_url, req_options = {}, req_headers = {}, retries = 5){
+    async doReq(req_url, req_options = {}, retries = 5){
         const url = new URL(TERABOX_BASE_URL + req_url);
+        let reqm_options = structuredClone(req_options);
+        let req_headers = {};
+        
+        if(reqm_options.headers){
+            req_headers = reqm_options.headers;
+            delete reqm_options.headers;
+        }
+        
+        const save_cookies = reqm_options.save_cookies;
+        delete reqm_options.save_cookies;
+        const req_timeout = reqm_options.timeout ? reqm_options.timeout : TERABOX_TIMEOUT;
+        delete reqm_options.timeout;
         
         try {
             const options = {
@@ -167,11 +184,23 @@ class TeraBoxApp {
                     'Cookie': this.params.auth,
                     ...req_headers,
                 },
-                signal: AbortSignal.timeout(TERABOX_TIMEOUT),
-                ...req_options,
+                ...reqm_options,
+                signal: AbortSignal.timeout(req_timeout),
             };
             
             const req = await request(url, options);
+            
+            if(save_cookies && req.headers['set-cookie']){
+                const cJar = new CookieJar();
+                this.params.auth.split(';').map(cookie => cJar.setCookieSync(cookie, TERABOX_BASE_URL));
+                if(typeof req.headers['set-cookie'] == 'string'){
+                    req.headers['set-cookie'] = [req.headers['set-cookie']];
+                }
+                for(const cookie of req.headers['set-cookie']){
+                   cJar.setCookieSync(cookie.split('; ')[0], TERABOX_BASE_URL);
+                }
+                this.params.auth = cJar.getCookiesSync(TERABOX_BASE_URL).map(cookie => cookie.cookieString()).join('; ');
+            }
             
             const rdata = await req.body.json();
             return rdata;
