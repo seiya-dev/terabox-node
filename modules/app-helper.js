@@ -142,7 +142,7 @@ function scanLocalPath(localPath){
         const blackListRegex = /(^\..*|\.!qB|\.part|\.tbtemp|\.temp|\.downloading)$/;
         const fsList = fs.readdirSync(localPath, {withFileTypes: true})
             .filter(item => !item.name.match(blackListRegex))
-            .map(item => { return { is_dir: item.isDirectory(), path: path.resolve(item.path, item.name).replace(/\\+/g, '/'), }})
+            .map(item => { return { is_dir: item.isDirectory(), path: path.resolve(item.parentPath, item.name).replace(/\\+/g, '/'), }})
             .sort((a, b) => {if(a.is_dir && !b.is_dir){return 1;}if(!a.is_dir && b.is_dir){return -1;}return 0;});
         return fsList;
     }
