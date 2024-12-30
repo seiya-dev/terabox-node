@@ -21,13 +21,15 @@ const config = loadYaml(path.resolve(__dirname, '../config/.config.yaml'));
 const meta = loadYaml(path.resolve(__dirname, '../package.json'));
 
 console.log(`[INFO] ${meta.name_ext} v${meta.version} (GetShareDL Module)`);
-let rootPath = '';
 
-const yargs = new Argv(config, ['a','s']);
+const yargs = new Argv(config, ['a','s','r']);
 if(yargs.getArgv('help')){
     yargs.showHelp();
     process.exit();
 }
+
+let rootPath = '';
+const reqPath = yargs.getArgv('r') || '';
 
 (async () => {
     try{
@@ -59,7 +61,7 @@ if(yargs.getArgv('help')){
     }
 })();
 
-async function getShareDL(argv_surl){    
+async function getShareDL(argv_surl){
     const tbUrl = argv_surl ? argv_surl : await input({ message: 'Share URL/SURL:' });
     const regexRUrl = /^\/s\/1([A-Za-z0-9_-]+)$/;
     const regexSUrl = /^[A-Za-z0-9_-]+$/;
@@ -97,7 +99,7 @@ async function getShareDL(argv_surl){
     let sFsList = [];
     if(shareInfo.errno == 0){
         if(shareInfo.fcount > 0){
-            sFsList = await getRemotePath(shareUrl, '');
+            sFsList = await getRemotePath(shareUrl, reqPath);
         }
     }
     else{
@@ -144,7 +146,7 @@ async function getRemotePath(shareUrl, remoteDir){
                 fileList.push(...subList);
             }
             else{
-                f.path = stripPath(f.path.split('/').slice(0, -1).join('/'));
+                f.path = changeRoot(stripPath(f.path.split('/').slice(0, -1).join('/')));
                 console.log('[INFO] addedFile:', 'root/' + (f.path?f.path+'/':'') + f.server_filename);
                 fileList.push(f);
             }
@@ -158,6 +160,11 @@ async function getRemotePath(shareUrl, remoteDir){
 
 function stripPath(rPath, rootDir){
     return (rootDir ? `${rootDir}/` : '') + rPath.replace(rootPath, '').replace(new RegExp('^/'), '');
+}
+
+function changeRoot(rPath){
+    const newRootDir = reqPath.replace(/\/+/g, '/').replace(new RegExp('^/'), '').replace(new RegExp('/$'), '');
+    return rPath.replace(new RegExp('^' + newRootDir), '').replace(new RegExp('^/'), '');
 }
 
 async function addDownloads(fsList){

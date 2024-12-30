@@ -7,6 +7,7 @@
     "bin": {
         "tb-check": "app/app-check.js",
         "tb-filemeta": "app/app-filemeta.js",
+        "tb-login-qr": "app/app-login-qr.js",
         "tb-getdl": "app/app-getdl.js",
         "tb-getdl-share": "app/app-getdl-share.js",
         "tb-mkhash": "app/app-mktbhash.js",
