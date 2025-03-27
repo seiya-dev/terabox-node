@@ -83,8 +83,8 @@ class TeraBoxApp {
             channel: 'dubox',
             clienttype: 0, // 5 is wap?
         },
-        ver_android: '3.36.0',
-        ua: 'terabox;1.32.0.1;PC;PC-Windows;10.0.22631;WindowsTeraBox',
+        ver_android: '3.40.0',
+        ua: 'terabox;1.37.0.7;PC;PC-Windows;10.0.22631;WindowsTeraBox',
         auth: '',
         is_vip: true,
         vip_type: 2,
