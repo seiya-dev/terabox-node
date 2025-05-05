@@ -20,7 +20,7 @@
     "description": "NodeJS tool for interacting with the TeraBox cloud service without the need to use the website or app ☁️",
     "dependencies": {
         "qrcode-terminal": "^0.12.0",
-        "terabox-api": "^1.0.1",
+        "terabox-api": "^1.0.5",
         "yargs": "^17.7.2"
     }
 }
