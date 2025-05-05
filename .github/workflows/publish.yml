@@ -1,0 +1,21 @@
+name: Publish Release
+
+on:
+  push:
+    tags:
+      - 'app-*.*.*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
