@@ -15,11 +15,11 @@ pnpm link -g
 2. Open the browser's developer tools (F12).
 3. Go to the "Application" tab.
 4. Select the "Cookies" item in the left panel.
-5. Look for the "ndus" cookie value and copy it to "config/.config.yaml".
+5. Look for the "ndus" cookie value and copy it to "app/.config.yaml".
 
 For downloading files using tb-getdl and tb-getdl-share you need Aria2 RPC server
 
-## "config/.config.yaml" example
+## "app/.config.yaml" example
 
 ```yaml
 accounts:

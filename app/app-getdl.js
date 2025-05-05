@@ -19,7 +19,7 @@ import {
 // init app
 let app = {};
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const config = loadYaml(path.resolve(__dirname, '../config/.config.yaml'));
+const config = loadYaml(path.resolve(__dirname, './.config.yaml'));
 const meta = loadYaml(path.resolve(__dirname, '../package.json'));
 
 console.log(`[INFO] ${meta.name_ext} v${meta.version} (GetDL Module)`);

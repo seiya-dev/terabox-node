@@ -8,30 +8,12 @@ importers:
 
   .:
     dependencies:
-      '@inquirer/input':
-        specifier: ^2.3.0
-        version: 2.3.0
-      '@inquirer/select':
-        specifier: ^2.5.0
-        version: 2.5.0
-      dateformat:
-        specifier: ^5.0.3
-        version: 5.0.3
-      filesize:
-        specifier: ^10.1.6
-        version: 10.1.6
       qrcode-terminal:
         specifier: ^0.12.0
         version: 0.12.0
-      tough-cookie:
-        specifier: ^5.0.0
-        version: 5.0.0
-      undici:
-        specifier: ^6.19.8
-        version: 6.19.8
-      yaml:
-        specifier: ^2.5.1
-        version: 2.5.1
+      terabox-api:
+        specifier: ^1.0.1
+        version: 1.0.1
       yargs:
         specifier: ^17.7.2
         version: 17.7.2
@@ -144,6 +126,9 @@ packages:
   strip-ansi@6.0.1:
     resolution: {integrity: sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==}
     engines: {node: '>=8'}
+
+  terabox-api@1.0.1:
+    resolution: {integrity: sha512-iMV18zyRNMbotB4G+ripCVIaLjSZdisthJMkM0/up3X9pMyhEpVDB7wfevtaQhfjmPAu9GHCzx6rSqy0bIYSrg==}
 
   tldts-core@6.1.45:
     resolution: {integrity: sha512-5HhO4lUBhKL3kIKkDv5+DM6XfSlEKUT0hJK+w/nSY6JLNPhWYEII24Pp3FpVGtTfSB6IvDpIptIOgcrw/jhb6Q==}
@@ -298,6 +283,16 @@ snapshots:
   strip-ansi@6.0.1:
     dependencies:
       ansi-regex: 5.0.1
+
+  terabox-api@1.0.1:
+    dependencies:
+      '@inquirer/input': 2.3.0
+      '@inquirer/select': 2.5.0
+      dateformat: 5.0.3
+      filesize: 10.1.6
+      tough-cookie: 5.0.0
+      undici: 6.19.8
+      yaml: 2.5.1
 
   tldts-core@6.1.45: {}
 

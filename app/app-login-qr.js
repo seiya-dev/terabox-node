@@ -4,14 +4,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import Argv from '../modules/app-argv.js';
+import Argv from './module-argv.js';
 import { Cookie, CookieJar } from 'tough-cookie';
-import TeraBoxApp from '../modules/api.js';
+import TeraBoxApp from 'terabox-api';
 import qr from 'qrcode-terminal';
 
 import {
     delay, loadYaml,
-} from '../modules/app-helper.js';
+} from 'terabox-api/helper.js';
 
 // init app
 let app = {};

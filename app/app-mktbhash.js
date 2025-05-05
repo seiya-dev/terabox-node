@@ -4,15 +4,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
 
-import Argv from '../modules/app-argv.js';
-import TeraBoxApp from '../modules/api.js';
+import Argv from './module-argv.js';
+import TeraBoxApp from 'terabox-api';
 
 import {
     loadYaml, saveYaml,
     selectLocalPath, scanLocalPath,
     hashFile, getChunkSize,
     unwrapErrorMessage,
-} from '../modules/app-helper.js';
+} from 'terabox-api/helper.js';
 
 // init app
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

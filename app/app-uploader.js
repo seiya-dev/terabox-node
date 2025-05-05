@@ -7,8 +7,8 @@ import { fileURLToPath } from 'url';
 import { request } from 'undici';
 import { filesize } from 'filesize';
 
-import TeraBoxApp from '../modules/api.js';
-import Argv from '../modules/app-argv.js';
+import TeraBoxApp from 'terabox-api';
+import Argv from './module-argv.js';
 
 import {
     loadYaml, saveYaml,
@@ -17,12 +17,12 @@ import {
     scanLocalPath, uploadChunks,
     hashFile, getChunkSize,
     unwrapErrorMessage,
-} from '../modules/app-helper.js';
+} from 'terabox-api/helper.js';
 
 // init app
 let app = {};
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const config = loadYaml(path.resolve(__dirname, '../config/.config.yaml'));
+const config = loadYaml(path.resolve(__dirname, './.config.yaml'));
 const meta = loadYaml(path.resolve(__dirname, '../package.json'));
 
 console.log(`[INFO] ${meta.name_ext} v${meta.version} (Uploader Module)`);
