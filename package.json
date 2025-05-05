@@ -19,8 +19,10 @@
     "license": "MIT",
     "description": "NodeJS tool for interacting with the TeraBox cloud service without the need to use the website or app ☁️",
     "dependencies": {
+        "filesize": "^10.1.6",
         "qrcode-terminal": "^0.12.0",
         "terabox-api": "^1.0.5",
+        "undici": "^7.8.0",
         "yargs": "^17.7.2"
     }
 }

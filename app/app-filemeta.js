@@ -89,6 +89,12 @@ async function showMeta(rPath, pathData){
         getMeta = await app.getFileMeta(fileList);
     }
     
+    if(getMeta.errno){
+        console.log(`:: Failed to Get Data...`);
+        console.log(`:: ERROR #${getMeta.errno}`);
+        return;
+    }
+    
     for(const f of getMeta.info){
         if(f.isdir == 1){
             continue;
