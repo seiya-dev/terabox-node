@@ -1,7 +1,7 @@
 {
     "name": "terabox-node",
     "name_ext": "TeraBox node",
-    "version": "3.0.0",
+    "version": "3.0.1",
     "type": "module",
     "bin": {
         "tb-check": "app/app-check.js",
