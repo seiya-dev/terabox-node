@@ -230,11 +230,10 @@ async function uploadDir(localDir, remoteDir){
             console.log(`:: Upload chunks...`);
         }
         
-        let upload_status;
-        upload_status = await uploadChunks(app, data, filePath);
+        const upload_status = await uploadChunks(app, data, filePath);
         delete data.uploaded;
         
-        if(upload_status){
+        if(upload_status.ok){
             try{
                 console.log(`:: Create file...`);
                 await app.updateAppData();
