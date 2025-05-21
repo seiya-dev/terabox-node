@@ -15,8 +15,8 @@ importers:
         specifier: ^0.12.0
         version: 0.12.0
       terabox-api:
-        specifier: ^1.1.0
-        version: 1.1.0(@types/node@22.5.4)
+        specifier: ^1.2.1
+        version: 1.2.1(@types/node@22.5.4)
       undici:
         specifier: ^7.10.0
         version: 7.10.0
@@ -96,6 +96,11 @@ packages:
   color-name@1.1.4:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
 
+  crc-32@1.2.2:
+    resolution: {integrity: sha512-ROmzCKrTnOwybPcJApAA6WBWij23HVfGVNKqqrZpuyZOHqK2CwHSvpGuyt/UNNvaIjEd8X5IFGp4Mh+Ie1IHJQ==}
+    engines: {node: '>=0.8'}
+    hasBin: true
+
   dateformat@5.0.3:
     resolution: {integrity: sha512-Kvr6HmPXUMerlLcLF+Pwq3K7apHpYmGDVqrxcDasBg86UcKeTSNWbEzU8bwdXnxnR44FtMhJAxI4Bov6Y/KUfA==}
     engines: {node: '>=12.20'}
@@ -143,8 +148,8 @@ packages:
     resolution: {integrity: sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==}
     engines: {node: '>=8'}
 
-  terabox-api@1.1.0:
-    resolution: {integrity: sha512-p80RAH8Kdh0AszI8d+5AaJnC75Xjoabmo5MxYBIc21CrmCQKmvjbiE0r6H2+VDcpKgdZTJo1Tt0sGPqGEI5vJQ==}
+  terabox-api@1.2.1:
+    resolution: {integrity: sha512-UA59HQ6QnwS11JfLGM1IY6WyCND9qn1GojIO5w0qmYg0pKQGFOB29mkOuBOtIdAJ+ejT4yVgtO0zAHHkSVV/xg==}
 
   tldts-core@6.1.45:
     resolution: {integrity: sha512-5HhO4lUBhKL3kIKkDv5+DM6XfSlEKUT0hJK+w/nSY6JLNPhWYEII24Pp3FpVGtTfSB6IvDpIptIOgcrw/jhb6Q==}
@@ -264,6 +269,8 @@ snapshots:
 
   color-name@1.1.4: {}
 
+  crc-32@1.2.2: {}
+
   dateformat@5.0.3: {}
 
   emoji-regex@8.0.0: {}
@@ -294,10 +301,11 @@ snapshots:
     dependencies:
       ansi-regex: 5.0.1
 
-  terabox-api@1.1.0(@types/node@22.5.4):
+  terabox-api@1.2.1(@types/node@22.5.4):
     dependencies:
       '@inquirer/input': 4.1.9(@types/node@22.5.4)
       '@inquirer/select': 4.2.0(@types/node@22.5.4)
+      crc-32: 1.2.2
       dateformat: 5.0.3
       filesize: 10.1.6
       tough-cookie: 5.0.0

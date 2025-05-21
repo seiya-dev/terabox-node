@@ -21,7 +21,7 @@
     "dependencies": {
         "filesize": "^10.1.6",
         "qrcode-terminal": "^0.12.0",
-        "terabox-api": "^1.1.0",
+        "terabox-api": "^1.2.1",
         "undici": "^7.10.0",
         "yargs": "^17.7.2"
     }

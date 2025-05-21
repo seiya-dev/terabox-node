@@ -230,7 +230,8 @@ async function uploadDir(localDir, remoteDir){
             console.log(`:: Upload chunks...`);
         }
         
-        const upload_status = await uploadChunks(app, data, filePath);
+        const maxTasks = data.size <= 8 * Math.pow(1024, 3) ? 10 : 5;
+        const upload_status = await uploadChunks(app, data, filePath, maxTasks);
         delete data.uploaded;
         
         if(upload_status.ok){
