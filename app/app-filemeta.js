@@ -2,7 +2,9 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
+
 import { filesize } from 'filesize';
 import { fetch } from 'undici';
 
@@ -109,19 +111,33 @@ async function showMeta(rPath, pathData){
         console.log();
         console.log('Fetching Hashes...');
         const hashReq = await fetch(f.dlink, {
-            method: 'HEAD',
             headers:{
                 'User-Agent': app.params.ua,
+                'Range': 'bytes=0-' + (256 * 1024 - 1), // 256kb
             },
             redirect: 'follow',
             signal: AbortSignal.timeout(app.TERABOX_TIMEOUT * 2),
         });
+        
+        if (hashReq.status !== 206) {
+            console.log(`Failed to Get Data...`);
+            continue;
+        }
+        
+        const hash = createHash('md5');
+        for await (const chunk of hashReq.body) {
+            hash.update(chunk);
+        }
+        
+        const md5slice = hash.digest('hex');
+        
         const crc32 = parseInt(hashReq.headers.get('x-bs-meta-crc32'));
         const md5hash = hashReq.headers.get('content-md5');
         
-        console.log('CRC32:', crc32, '(int)');
-        console.log('CRC32:', crc32.toString(16).toUpperCase().padStart(8, '0'), '(hex)');
-        console.log('MD5  :', md5hash);
+        console.log('CRC32   :', crc32, '(int)');
+        console.log('CRC32   :', crc32.toString(16).toUpperCase().padStart(8, '0'), '(hex)');
+        console.log('MD5Slice:', md5slice);
+        console.log('MD5File :', md5hash);
         console.log();
     }
 } 
