@@ -15,8 +15,8 @@ importers:
         specifier: ^0.12.0
         version: 0.12.0
       terabox-api:
-        specifier: ^1.2.1
-        version: 1.2.1(@types/node@22.5.4)
+        specifier: ^1.2.2
+        version: 1.2.2(@types/node@22.5.4)
       undici:
         specifier: ^7.10.0
         version: 7.10.0
@@ -148,8 +148,8 @@ packages:
     resolution: {integrity: sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==}
     engines: {node: '>=8'}
 
-  terabox-api@1.2.1:
-    resolution: {integrity: sha512-UA59HQ6QnwS11JfLGM1IY6WyCND9qn1GojIO5w0qmYg0pKQGFOB29mkOuBOtIdAJ+ejT4yVgtO0zAHHkSVV/xg==}
+  terabox-api@1.2.2:
+    resolution: {integrity: sha512-av1uFgI1iB89+V5q1TVyc4RF4sX2O9xvyxZwV6rC4O0X2Y2AAne86oksVx8JT7lBPNtY6COykj9iqZOZSGTyPQ==}
 
   tldts-core@6.1.45:
     resolution: {integrity: sha512-5HhO4lUBhKL3kIKkDv5+DM6XfSlEKUT0hJK+w/nSY6JLNPhWYEII24Pp3FpVGtTfSB6IvDpIptIOgcrw/jhb6Q==}
@@ -301,7 +301,7 @@ snapshots:
     dependencies:
       ansi-regex: 5.0.1
 
-  terabox-api@1.2.1(@types/node@22.5.4):
+  terabox-api@1.2.2(@types/node@22.5.4):
     dependencies:
       '@inquirer/input': 4.1.9(@types/node@22.5.4)
       '@inquirer/select': 4.2.0(@types/node@22.5.4)
