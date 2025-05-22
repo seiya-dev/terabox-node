@@ -105,6 +105,7 @@ async function uploadDir(localDir, remoteDir){
         const filePath = fi.path;
         const isTBHash = filePath.match(/\.tbhash$/) ? true : false;
         
+        const tbHashFile = filePath + '.tbhash';
         const tbtempfile = isTBHash ? filePath : filePath + '.tbtemp';
         const data = loadYaml(tbtempfile);
         delete data.error;
@@ -157,6 +158,11 @@ async function uploadDir(localDir, remoteDir){
                 console.warn(':: But file size not match: LOCAL/REMOTE', localFileSize, '/', remoteFileSize);
             }
             continue;
+        }
+        
+        if(!isTBHash && !data.hash && fs.existsSync(tbHashFile){
+            const tbHashData = loadYaml(tbHashFile);
+            data.hash = tbHashData.hash;
         }
         
         if(!isTBHash && !data.hash){
