@@ -160,7 +160,7 @@ async function uploadDir(localDir, remoteDir){
             continue;
         }
         
-        if(!isTBHash && !data.hash && fs.existsSync(tbHashFile){
+        if(!isTBHash && !data.hash && fs.existsSync(tbHashFile)){
             const tbHashData = loadYaml(tbHashFile);
             data.hash = tbHashData.hash;
         }
