@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import input from '@inquirer/input';
 import select from '@inquirer/select';
 
 import Argv from './module-argv.js';
@@ -64,7 +65,6 @@ async function getMeta(){
     
     console.log();
     await showAccountInfo(app);
-    console.log();
     
     const remotePath = await selectRemotePath(yargs.getArgv('r'));
     const remotePathData = await app.getRemoteDir(remotePath);
@@ -82,6 +82,19 @@ async function getMeta(){
             await app.updateAppData();
             const fmDelete = await app.filemanager(mode, [remotePath]);
             console.log(fmDelete);
+            
+            return;
+        }
+        
+        if(mode == 'rename'){
+            const newname = await input({ message: 'New Name:' });
+            
+            await app.updateAppData();
+            const fmRename = await app.filemanager(mode, [{
+                "path": remotePath,
+                "newname": newname,
+            }]);
+            console.log(fmRename);
             
             return;
         }
