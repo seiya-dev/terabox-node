@@ -12,7 +12,7 @@ import TeraBoxApp from 'terabox-api';
 
 import {
     loadYaml, selectAccount,
-} from 'terabox-api/helper.js';
+} from './module-helper.js';
 
 // init app
 let app = {};

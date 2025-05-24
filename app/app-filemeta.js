@@ -16,7 +16,7 @@ import {
     selectAccount,
     showAccountInfo,
     selectRemotePath,
-} from 'terabox-api/helper.js';
+} from './module-helper.js';
 
 // init app
 let app = {};

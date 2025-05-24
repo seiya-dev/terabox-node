@@ -6,15 +6,15 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'url';
 import { request } from 'undici';
 
-import Argv from '../modules/app-argv.js';
-import TeraBoxApp from '../modules/api.js';
+import Argv from './module-argv.js';
+import TeraBoxApp from 'terabox-api';
 
 import {
     loadYaml,
     selectAccount,
     showAccountInfo,
     selectRemotePath,
-} from '../modules/app-helper.js';
+} from './module-helper.js';
 
 // init app
 let app = {};

@@ -11,7 +11,7 @@ import qr from 'qrcode-terminal';
 
 import {
     delay, loadYaml,
-} from 'terabox-api/helper.js';
+} from './module-helper.js';
 
 // init app
 let app = {};

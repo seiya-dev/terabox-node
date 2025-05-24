@@ -11,7 +11,7 @@ import {
     loadYaml,
     selectAccount,
     showAccountInfo,
-} from 'terabox-api/helper.js';
+} from './module-helper.js';
 
 // init app
 let app = {};

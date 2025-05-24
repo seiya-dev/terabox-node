@@ -10,13 +10,15 @@ import TeraBoxApp from 'terabox-api';
 import {
     loadYaml, saveYaml,
     selectLocalPath, scanLocalPath,
+} from './module-helper.js';
+
+import {
     hashFile, getChunkSize,
     unwrapErrorMessage,
 } from 'terabox-api/helper.js';
 
 // init app
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const config = loadYaml(path.resolve(__dirname, '../config/.config.yaml'));
 const meta = loadYaml(path.resolve(__dirname, '../package.json'));
 
 console.log(`[INFO] ${meta.name_ext} v${meta.version} (Make TBHash Module)`);
