@@ -14,7 +14,11 @@ import {
     loadYaml, saveYaml,
     selectAccount, showAccountInfo,
     selectLocalPath, selectRemotePath,
-    scanLocalPath, uploadChunks,
+    scanLocalPath
+} from './module-helper.js';
+
+import {
+    uploadChunks,
     hashFile, getChunkSize,
     unwrapErrorMessage,
 } from 'terabox-api/helper.js';
