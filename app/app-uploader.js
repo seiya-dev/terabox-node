@@ -83,6 +83,7 @@ async function uploadDir(localDir, remoteDir){
         else{
             await app.updateAppData();
             const remoteDirData = await app.createDir(remoteDir);
+            console.log('Remote Dir Created:', remoteDir);
             if(remoteDirData.errno != 0){
                 throw new Error('Bad Response', { cause: remoteDirData });
             }

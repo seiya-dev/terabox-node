@@ -135,7 +135,7 @@ function cleanupName(fsName) {
 
 function scanLocalPath(localPath){
     try{
-        const blackListRegex = /(^\..*|\.!qB|\.part|\.tbtemp|\.temp|\.downloading)$/;
+        const blackListRegex = /(^\..*|\.!qB|\.part|\.tbtemp|\.temp|\.downloading)$/i;
         const fsList = fs.readdirSync(localPath, {withFileTypes: true})
             .filter(item => !item.name.match(blackListRegex))
             .map(item => { return { is_dir: item.isDirectory(), path: path.resolve(item.parentPath, item.name).replace(/\\+/g, '/'), }})
