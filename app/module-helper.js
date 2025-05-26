@@ -19,7 +19,13 @@ async function delay(ms){
 function loadYaml(file){
     try{
         const data = fs.readFileSync(file, 'utf8');
-        return YAML.parse(data);
+        const obj = YAML.parse(data);
+        if(Object.prototype.toString.call(obj) === '[object Object]'){
+            return obj;
+        }
+        else{
+            throw new Error('Bad YAML!');
+        }
     }
     catch(e){
         return { error: e };
