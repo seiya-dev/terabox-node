@@ -19,7 +19,7 @@
     "license": "MIT",
     "description": "NodeJS tool for interacting with the TeraBox cloud service without the need to use the website or app ☁️",
     "dependencies": {
-        "@inquirer/input": "^4.1.11",
+        "@inquirer/input": "^4.1.12",
         "@inquirer/select": "^4.2.3",
         "dateformat": "^5.0.3",
         "filesize": "^10.1.6",
