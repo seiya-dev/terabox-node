@@ -193,6 +193,9 @@ async function uploadDir(localDir, remoteDir){
                     }
                     continue;
                 }
+                else if(rapidUploadData.errno == 404){
+                    console.log(`:: File Not Uploaded Yet:`, data.file, `(${data.size})`);
+                }
                 else{
                     console.warn(':: Failed to RapidUpload file:', rapidUploadData);
                 }
@@ -242,7 +245,7 @@ async function uploadDir(localDir, remoteDir){
             console.log(`:: Upload chunks...`);
         }
         
-        const maxTasks = data.size <= 4 * Math.pow(1024, 3) ? 10 : 5;
+        // const maxTasks = data.size <= 4 * Math.pow(1024, 3) ? 10 : 5;
         const upload_status = await uploadChunks(app, data, filePath, maxTasks);
         delete data.uploaded;
         
@@ -260,8 +263,6 @@ async function uploadDir(localDir, remoteDir){
                     remoteFsList.push({ server_filename: remoteFile, size: data.size });
                     
                     console.log(':: Checking created file...');
-                    const rmeta = await app.getFileMeta([upload_info.path]);
-                    
                     const fsizeMatchMsg = data.size == rmeta.info[0].size ? 'MATCH' : 'MISMATCH';
                     const logFSize = data.size == rmeta.info[0].size ? console.log : console.error;
                     logFSize(':: SIZE:', rmeta.info[0].size, `(${fsizeMatchMsg})`);
