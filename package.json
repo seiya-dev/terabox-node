@@ -1,7 +1,7 @@
 {
     "name": "terabox-node",
     "name_ext": "TeraBox node",
-    "version": "3.0.7",
+    "version": "3.0.8",
     "type": "module",
     "bin": {
         "tb-check": "app/app-check.js",
@@ -25,6 +25,7 @@
         "filesize": "^10.1.6",
         "qrcode-terminal": "^0.12.0",
         "terabox-api": "^1.3.2",
+        "tough-cookie": "^5.1.2",
         "undici": "^7.10.0",
         "yaml": "^2.8.0",
         "yargs": "^17.7.2"
