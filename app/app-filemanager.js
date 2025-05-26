@@ -33,7 +33,7 @@ if(yargs.getArgv('help')){
 
 (async () => {
     try{
-        await getMeta();
+        await doFM();
     }
     catch(error){
         console.error(':: FAILED:', error);
@@ -41,7 +41,7 @@ if(yargs.getArgv('help')){
 })();
 
 
-async function getMeta(){
+async function doFM(){
     if(!config.accounts){
         console.error('[ERROR] Accounts not set!');
         return;
