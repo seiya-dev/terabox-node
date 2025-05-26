@@ -26,6 +26,27 @@ function loadYaml(file){
     }
 }
 
+function loadTBTemp(filePath, remoteDir){
+    const tbtempfile = filePath + '.tbtemp';
+    const data = loadYaml(tbtempfile);
+    delete data.error;
+    
+    if(typeof(data.upload_id) !== 'string'){
+        data.upload_id = '';
+    }
+    if(typeof(data.remote_dir) !== 'string' || data.remote_dir == ''){
+        data.remote_dir = remoteDir;
+    }
+    if(typeof(data.file) !== 'string' || data.file == ''){
+        data.file = path.basename(filePath);
+    }
+    if(!Number.isSafeInteger(data.size) || data.size < 0){
+        data.size = fs.statSync(filePath).size;
+    }
+    
+    return { tbtempfile, data };
+}
+
 function saveYaml(file, data){
     fs.writeFileSync(file, YAML.stringify(data, {lineWidth: 0}));
 }
@@ -150,6 +171,7 @@ function scanLocalPath(localPath){
 export {
     delay,
     loadYaml,
+    loadTBTemp,
     saveYaml,
     selectAccount,
     showAccountInfo,
