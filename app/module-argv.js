@@ -20,6 +20,7 @@ class Args {
         this.yargs.wrap(Math.min(120));
         this.yargs.usage('Usage: $0 [options]');
         this.yargs.version(false);
+        this.yargs.help(false);
         // set options
         const yargsOpts = {};
         for(const a of reqArgs){

@@ -2,6 +2,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'url';
 
 import { request } from 'undici';
@@ -246,7 +247,7 @@ async function uploadDir(localDir, remoteDir){
         }
         
         // const maxTasks = data.size <= 4 * Math.pow(1024, 3) ? 10 : 5;
-        const upload_status = await uploadChunks(app, data, filePath, maxTasks);
+        const upload_status = await uploadChunks(app, data, filePath);
         delete data.uploaded;
         
         if(upload_status.ok){
@@ -263,11 +264,33 @@ async function uploadDir(localDir, remoteDir){
                     remoteFsList.push({ server_filename: remoteFile, size: data.size });
                     
                     console.log(':: Checking created file...');
+                    const rmeta = await app.getFileMeta([upload_info.path]);
+                    
+                    // hash check
+                    
+                    let hashmatch;
+                    if(data.hash.chunks.length > 1){
+                        const hashStr = JSON.stringify(data.hash.chunks);
+                        const tbServerHash = crypto.createHash('md5').update(hashStr).digest('hex');
+                        hashmatch = tbServerHash == upload_info.md5;
+                    }
+                    else{
+                        hashmatch = data.hash.file == upload_info.md5;
+                    }
+                    
+                    const hashMatchMsg = hashmatch ? 'MATCH' : 'MISMATCH';
+                    const logHashMatch = hashmatch ? console.log : console.error;
+                    logHashMatch(':: HASH:', upload_info.md5, `(${hashMatchMsg})`);
+                    
+                    // file size check
+                    
                     const fsizeMatchMsg = data.size == rmeta.info[0].size ? 'MATCH' : 'MISMATCH';
                     const logFSize = data.size == rmeta.info[0].size ? console.log : console.error;
                     logFSize(':: SIZE:', rmeta.info[0].size, `(${fsizeMatchMsg})`);
                     
-                    if(data.size != rmeta.info[0].size){
+                    // skip deleting tbtemp file...
+                    
+                    if(data.size != rmeta.info[0].size || !hashmatch){
                         continue;
                     }
                     
