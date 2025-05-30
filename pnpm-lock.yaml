@@ -24,8 +24,8 @@ importers:
         specifier: ^0.12.0
         version: 0.12.0
       terabox-api:
-        specifier: ^1.3.8
-        version: 1.3.8
+        specifier: ^1.3.10
+        version: 1.3.10
       tough-cookie:
         specifier: ^5.1.2
         version: 5.1.2
@@ -182,8 +182,8 @@ packages:
     resolution: {integrity: sha512-iq6eVVI64nQQTRYq2KtEg2d2uU7LElhTJwsH4YzIHZshxlgZms/wIc4VoDQTlG/IvVIrBKG06CrZnp0qv7hkcQ==}
     engines: {node: '>=12'}
 
-  terabox-api@1.3.8:
-    resolution: {integrity: sha512-YFemdeiaZZrrg29TWWuxuNTJRgbKzQEcHhIaA3/0aJuXuwd6vfVDkW9dd89pPREGw32xNutVFiA8ruQXeG892Q==}
+  terabox-api@1.3.10:
+    resolution: {integrity: sha512-u9/RI1g5bPXb65wJTaPLsFXKnJOY/gT6NxutLhu/aCIr00HC8tEnLBzQ8sC8L+WxbnxVNzRKvAW5JsVSKKPrug==}
 
   tldts-core@6.1.45:
     resolution: {integrity: sha512-5HhO4lUBhKL3kIKkDv5+DM6XfSlEKUT0hJK+w/nSY6JLNPhWYEII24Pp3FpVGtTfSB6IvDpIptIOgcrw/jhb6Q==}
@@ -351,7 +351,7 @@ snapshots:
     dependencies:
       ansi-regex: 6.1.0
 
-  terabox-api@1.3.8:
+  terabox-api@1.3.10:
     dependencies:
       crc-32: 1.2.2
       filesize: 10.1.6

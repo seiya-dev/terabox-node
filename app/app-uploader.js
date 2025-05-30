@@ -265,35 +265,32 @@ async function uploadDir(localDir, remoteDir){
                     
                     console.log(':: Checking created file...');
                     const rmeta = await app.getFileMeta([upload_info.path]);
+                    const fmeta = rmeta.info[0];
+                    
+                    // build weak etag
+                    const chunksJSON = JSON.stringify(data.hash.chunks);
+                    const chunksETAG = crypto.createHash('md5').update(chunksJSON).digest('hex');
+                    const weakEtag = data.hash.chunks.length > 1 ? chunksETAG : data.hash.file;
                     
                     // hash check
+                    const hashMatch = weakEtag === fmeta.md5;
+                    const hashMatchMsg = hashMatch ? 'MATCH' : 'MISMATCH';
+                    const logHashMatch = hashMatch ? console.log : console.error;
+                    logHashMatch(':: HASH:', fmeta.md5, `(${hashMatchMsg})`);
                     
-                    let hashmatch;
-                    if(data.hash.chunks.length > 1){
-                        const hashStr = JSON.stringify(data.hash.chunks);
-                        const tbServerHash = crypto.createHash('md5').update(hashStr).digest('hex');
-                        hashmatch = tbServerHash == upload_info.md5;
-                    }
-                    else{
-                        hashmatch = data.hash.file == upload_info.md5;
-                    }
+                    // size check
+                    const sizeMatch = data.size === fmeta.size;
+                    const sizeMatchMsg = sizeMatch ? 'MATCH' : 'MISMATCH';
+                    const logSizeMatch = sizeMatch ? console.log : console.error;
+                    logSizeMatch(':: SIZE:', fmeta.size, `(${sizeMatchMsg})`);
                     
-                    const hashMatchMsg = hashmatch ? 'MATCH' : 'MISMATCH';
-                    const logHashMatch = hashmatch ? console.log : console.error;
-                    logHashMatch(':: HASH:', upload_info.md5, `(${hashMatchMsg})`);
-                    
-                    // file size check
-                    
-                    const fsizeMatchMsg = data.size == rmeta.info[0].size ? 'MATCH' : 'MISMATCH';
-                    const logFSize = data.size == rmeta.info[0].size ? console.log : console.error;
-                    logFSize(':: SIZE:', rmeta.info[0].size, `(${fsizeMatchMsg})`);
-                    
-                    // skip deleting tbtemp file...
-                    
-                    if(data.size != rmeta.info[0].size || !hashmatch){
+                    // skip deleting tbtemp file if mismatch...
+                    if(!sizeMatch || !hashMatch){
+                        console.error(':: File is BAD!');
                         continue;
                     }
                     
+                    // remove tbtemp file if everything is ok
                     console.log(':: File is OK!');
                     removeTbTemp(tbtempfile);
                     continue;
