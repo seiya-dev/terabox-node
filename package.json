@@ -1,12 +1,13 @@
 {
     "name": "terabox-node",
     "name_ext": "TeraBox node",
-    "version": "3.1.4",
+    "version": "3.1.5",
     "type": "module",
     "bin": {
         "tb-check": "app/app-check.js",
         "tb-filemanager": "app/app-filemanager.js",
         "tb-filemeta": "app/app-filemeta.js",
+        "tb-login": "app/app-login.js",
         "tb-login-qr": "app/app-login-qr.js",
         "tb-getdl": "app/app-getdl.js",
         "tb-getdl-share": "app/app-getdl-share.js",
