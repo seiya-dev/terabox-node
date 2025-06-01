@@ -54,9 +54,9 @@ if(yargs.getArgv('help')){
         reqQr.data.seq++;
         // {"code":39,"logid":1739039730,"msg":"login timeout"} -> retry w seq+1;
         // {"code":37,"logid":3933965318,"msg":"uuid expire"} -> force exit
-    } while (doLoginReq.code == 39);
+    } while (doLoginReq.code === 39);
     
-    if(doLoginReq.code != 0){
+    if(doLoginReq.code !== 0){
         console.log('[ERROR] Failed to Login:', doLoginReq);
         return;
     }
@@ -64,10 +64,10 @@ if(yargs.getArgv('help')){
     const userData = doLoginReq.data;
     doLoginReq = await qrLogin(reqQr.data.uuid, reqQr.data.seq, 1);
     
-    if(doLoginReq.code == 0){
+    if(doLoginReq.code === 0){
         const cJar = new CookieJar();
-        app.params.auth.split(';').map(cookie => cJar.setCookieSync(cookie, app.params.whost));
-        const authToken = cJar.toJSON().cookies.find(c => c.key == 'ndus');
+        app.params.cookie.split(';').map(cookie => cJar.setCookieSync(cookie, app.params.whost));
+        const authToken = cJar.toJSON().cookies.find(c => c.key === 'ndus');
         console.log(`[AUTH] ${userData.uname}: ${authToken.value}`);
     }
     else{
