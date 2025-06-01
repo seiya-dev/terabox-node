@@ -23,7 +23,7 @@ const meta = loadYaml(path.resolve(__dirname, '../package.json'));
 
 console.log(`[INFO] ${meta.name_ext} v${meta.version} (Make TBHash Module)`);
 
-const yargs = new Argv(config, ['l','skip-chunks']);
+const yargs = new Argv({}, ['l','skip-chunks']);
 if(yargs.getArgv('help')){
     yargs.showHelp();
     process.exit();
