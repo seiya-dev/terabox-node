@@ -74,20 +74,21 @@ async function selectAccount(config){
 
 async function showAccountInfo(app){
     const acc_info = await app.getCurrentUserInfo();
-    const acc_data = await app.userMembership();
     const acc_quota = await app.getQuota();
     
-    console.info('[INFO] USER:', app.params.account_name);
+    console.info('[INFO] USER:', app.params.account_name, `(${acc_info.records[0].email})`);
     
     const spaceUsed = filesize(acc_quota.used, {standard: 'iec', round: 3, pad: true});
     const spaceTotal = filesize(acc_quota.total, {standard: 'iec', round: 3, pad: true});
     const spaceFree = filesize(acc_quota.available, {standard: 'iec', round: 3, pad: true});
     console.info('[INFO] Space:', spaceFree, '/', spaceTotal, '[FREE / TOTAL]');
     
-    const vip_end_time = acc_data.data.member_info.vip_end_time * 1000;
-    const vip_left_time = Math.floor(acc_data.data.member_info.vip_left_time / (24*60*60));
-    
     if(app.params.is_vip){
+        const acc_data = await app.userMembership();
+        
+        const vip_end_time = acc_data.data.member_info.vip_end_time * 1000;
+        const vip_left_time = Math.floor(acc_data.data.member_info.vip_left_time / (24*60*60));
+        
         const vip_end_date = dateFormat(vip_end_time, 'UTC:yyyy-mm-dd');
         console.info('[INFO] VIP: End on', vip_end_date, '/', vip_left_time, 'days left'); 
     }
