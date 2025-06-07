@@ -73,11 +73,11 @@ async function selectAccount(config){
 }
 
 async function showAccountInfo(app){
-    const acc_info = await app.getPassport();
-    const acc_data = await app.getAccountData();
+    const acc_info = await app.getCurrentUserInfo();
+    const acc_data = await app.userMembership();
     const acc_quota = await app.getQuota();
     
-    console.info('[INFO] USER:', acc_info.data.display_name);
+    console.info('[INFO] USER:', app.params.account_name);
     
     const spaceUsed = filesize(acc_quota.used, {standard: 'iec', round: 3, pad: true});
     const spaceTotal = filesize(acc_quota.total, {standard: 'iec', round: 3, pad: true});

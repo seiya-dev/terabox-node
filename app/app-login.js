@@ -36,7 +36,7 @@ if(yargs.getArgv('help')){
 async function tryPreLogin(){
     try{
         const email = await input({ message: 'EMail:' });
-        const preLoginData = await app.preLogin(email);
+        const preLoginData = await app.passportPreLogin(email);
         if(preLoginData.code === 0){
             preLoginData.data.email = email;
             return preLoginData.data;
@@ -52,7 +52,7 @@ async function tryPreLogin(){
 async function tryLogin(preLogin){
     try{
         const pass = await password({ message: 'Password:' });
-        const authData = await app.doAuth(preLogin, preLogin.email, pass);
+        const authData = await app.passportLogin(preLogin, preLogin.email, pass);
         if(authData.code === 0){
             return authData.data;
         }
