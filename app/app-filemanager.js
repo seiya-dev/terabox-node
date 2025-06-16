@@ -79,7 +79,6 @@ async function doFM(){
         });
         
         if(mode == 'delete'){
-            await app.updateAppData();
             const fmDelete = await app.filemanager(mode, [remotePath]);
             console.log(fmDelete);
             
@@ -89,7 +88,6 @@ async function doFM(){
         if(mode == 'rename'){
             const newname = await input({ message: 'New Name:' });
             
-            await app.updateAppData();
             const fmRename = await app.filemanager(mode, [{
                 "path": remotePath,
                 "newname": newname,

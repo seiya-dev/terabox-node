@@ -93,7 +93,6 @@ async function getShareDL(argv_surl){
         return;
     }
     
-    await app.updateAppData();
     const shareInfo = await app.shortUrlInfo(shareUrl);
     
     let sFsList = [];

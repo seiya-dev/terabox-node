@@ -82,7 +82,6 @@ async function uploadDir(localDir, remoteDir){
             remoteFsList = reqRemoteDir.list;
         }
         else{
-            await app.updateAppData();
             const remoteDirData = await app.createDir(remoteDir);
             console.log('Remote Dir Created:', remoteDir);
             if(remoteDirData.errno != 0){
@@ -181,7 +180,6 @@ async function uploadDir(localDir, remoteDir){
         if(!yargs.getArgv('no-rapidupload') && data.size > 256 * 1024){
             try {
                 console.log(`:: Trying RapidUpload file...`);
-                await app.updateAppData();
                 // do rapid upload...
                 const rapidUploadData = await app.rapidUpload(data);
                 if(rapidUploadData.errno == 0){
@@ -215,7 +213,6 @@ async function uploadDir(localDir, remoteDir){
         }
         
         console.log(`:: Precreate file...`);
-        await app.updateAppData();
         
         try{
             const preCreateData = await app.precreateFile(data);
@@ -253,7 +250,6 @@ async function uploadDir(localDir, remoteDir){
         if(upload_status.ok){
             try{
                 console.log(`:: Create file...`);
-                await app.updateAppData();
                 const upload_info = await app.createFile(data);
                 
                 if(upload_info.errno == 0){
