@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@inquirer/input':
-        specifier: ^4.1.12
-        version: 4.1.12(@types/node@22.5.4)
+        specifier: ^4.2.0
+        version: 4.2.0(@types/node@22.5.4)
       '@inquirer/password':
         specifier: ^4.0.15
         version: 4.0.15(@types/node@22.5.4)
@@ -53,12 +53,21 @@ packages:
       '@types/node':
         optional: true
 
+  '@inquirer/core@10.1.14':
+    resolution: {integrity: sha512-Ma+ZpOJPewtIYl6HZHZckeX1STvDnHTCB2GVINNUlSEn2Am6LddWwfPkIGY0IUFVjUUrr/93XlBwTK6mfLjf0A==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@types/node': '>=18'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+
   '@inquirer/figures@1.0.12':
     resolution: {integrity: sha512-MJttijd8rMFcKJC8NYmprWr6hD3r9Gd9qUC0XwPNwoEPWSMVJwA2MlXxF+nhZZNMY+HXsWa+o7KY2emWYIn0jQ==}
     engines: {node: '>=18'}
 
-  '@inquirer/input@4.1.12':
-    resolution: {integrity: sha512-xJ6PFZpDjC+tC1P8ImGprgcsrzQRsUh9aH3IZixm1lAZFK49UGHxM3ltFfuInN2kPYNfyoPRh+tU4ftsjPLKqQ==}
+  '@inquirer/input@4.2.0':
+    resolution: {integrity: sha512-opqpHPB1NjAmDISi3uvZOTrjEEU5CWVu/HBkDby8t93+6UxYX0Z7Ps0Ltjm5sZiEbWenjubwUkivAEYQmy9xHw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@types/node': '>=18'
@@ -263,11 +272,24 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.5.4
 
+  '@inquirer/core@10.1.14(@types/node@22.5.4)':
+    dependencies:
+      '@inquirer/figures': 1.0.12
+      '@inquirer/type': 3.0.7(@types/node@22.5.4)
+      ansi-escapes: 4.3.2
+      cli-width: 4.1.0
+      mute-stream: 2.0.0
+      signal-exit: 4.1.0
+      wrap-ansi: 6.2.0
+      yoctocolors-cjs: 2.1.2
+    optionalDependencies:
+      '@types/node': 22.5.4
+
   '@inquirer/figures@1.0.12': {}
 
-  '@inquirer/input@4.1.12(@types/node@22.5.4)':
+  '@inquirer/input@4.2.0(@types/node@22.5.4)':
     dependencies:
-      '@inquirer/core': 10.1.13(@types/node@22.5.4)
+      '@inquirer/core': 10.1.14(@types/node@22.5.4)
       '@inquirer/type': 3.0.7(@types/node@22.5.4)
     optionalDependencies:
       '@types/node': 22.5.4
