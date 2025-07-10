@@ -22,7 +22,7 @@
     "description": "NodeJS tool for interacting with the TeraBox cloud service without the need to use the website or app ☁️",
     "dependencies": {
         "@inquirer/input": "^4.2.0",
-        "@inquirer/password": "^4.0.15",
+        "@inquirer/password": "^4.0.16",
         "@inquirer/select": "^4.2.4",
         "dateformat": "^5.0.3",
         "filesize": "^10.1.6",
