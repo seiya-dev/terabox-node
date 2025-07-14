@@ -21,8 +21,8 @@ importers:
         specifier: ^5.0.3
         version: 5.0.3
       filesize:
-        specifier: ^10.1.6
-        version: 10.1.6
+        specifier: ^11.0.1
+        version: 11.0.1
       qrcode-terminal:
         specifier: ^0.12.0
         version: 0.12.0
@@ -152,6 +152,10 @@ packages:
 
   filesize@10.1.6:
     resolution: {integrity: sha512-sJslQKU2uM33qH5nqewAwVB2QgR6w1aMNsYUp3aN5rMRyXEwJGmZvaWzeJFNTOXWlHQyBFCWrdj3fV/fsTOX8w==}
+    engines: {node: '>= 10.4.0'}
+
+  filesize@11.0.1:
+    resolution: {integrity: sha512-ua1SLPcFgqf1lICRVqTA5d8T6kqg2ZTIm0BImnUk4pZzfAlwhqO9zKv7GCE5FGl3zIbBZZSmq7yLikFNsi5eXw==}
     engines: {node: '>= 10.4.0'}
 
   get-caller-file@2.0.5:
@@ -338,6 +342,8 @@ snapshots:
   escalade@3.2.0: {}
 
   filesize@10.1.6: {}
+
+  filesize@11.0.1: {}
 
   get-caller-file@2.0.5: {}
 
