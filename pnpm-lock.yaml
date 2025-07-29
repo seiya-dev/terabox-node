@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@inquirer/input':
-        specifier: ^4.2.0
-        version: 4.2.0(@types/node@22.5.4)
+        specifier: ^4.2.1
+        version: 4.2.1(@types/node@22.5.4)
       '@inquirer/password':
-        specifier: ^4.0.16
-        version: 4.0.16(@types/node@22.5.4)
+        specifier: ^4.0.17
+        version: 4.0.17(@types/node@22.5.4)
       '@inquirer/select':
         specifier: ^4.3.1
         version: 4.3.1(@types/node@22.5.4)
@@ -27,8 +27,8 @@ importers:
         specifier: ^0.12.0
         version: 0.12.0
       terabox-api:
-        specifier: ^2.4.3
-        version: 2.4.3
+        specifier: ^2.4.4
+        version: 2.4.4
       tough-cookie:
         specifier: ^5.1.2
         version: 5.1.2
@@ -44,15 +44,6 @@ importers:
 
 packages:
 
-  '@inquirer/core@10.1.14':
-    resolution: {integrity: sha512-Ma+ZpOJPewtIYl6HZHZckeX1STvDnHTCB2GVINNUlSEn2Am6LddWwfPkIGY0IUFVjUUrr/93XlBwTK6mfLjf0A==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@types/node': '>=18'
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-
   '@inquirer/core@10.1.15':
     resolution: {integrity: sha512-8xrp836RZvKkpNbVvgWUlxjT4CraKk2q+I3Ksy+seI2zkcE+y6wNs1BVhgcv8VyImFecUhdQrYLdW32pAjwBdA==}
     engines: {node: '>=18'}
@@ -62,16 +53,12 @@ packages:
       '@types/node':
         optional: true
 
-  '@inquirer/figures@1.0.12':
-    resolution: {integrity: sha512-MJttijd8rMFcKJC8NYmprWr6hD3r9Gd9qUC0XwPNwoEPWSMVJwA2MlXxF+nhZZNMY+HXsWa+o7KY2emWYIn0jQ==}
-    engines: {node: '>=18'}
-
   '@inquirer/figures@1.0.13':
     resolution: {integrity: sha512-lGPVU3yO9ZNqA7vTYz26jny41lE7yoQansmqdMLBEfqaGsmdg7V3W9mK9Pvb5IL4EVZ9GnSDGMO/cJXud5dMaw==}
     engines: {node: '>=18'}
 
-  '@inquirer/input@4.2.0':
-    resolution: {integrity: sha512-opqpHPB1NjAmDISi3uvZOTrjEEU5CWVu/HBkDby8t93+6UxYX0Z7Ps0Ltjm5sZiEbWenjubwUkivAEYQmy9xHw==}
+  '@inquirer/input@4.2.1':
+    resolution: {integrity: sha512-tVC+O1rBl0lJpoUZv4xY+WGWY8V5b0zxU1XDsMsIHYregdh7bN5X5QnIONNBAl0K765FYlAfNHS2Bhn7SSOVow==}
     engines: {node: '>=18'}
     peerDependencies:
       '@types/node': '>=18'
@@ -79,8 +66,8 @@ packages:
       '@types/node':
         optional: true
 
-  '@inquirer/password@4.0.16':
-    resolution: {integrity: sha512-g8BVNBj5Zeb5/Y3cSN+hDUL7CsIFDIuVxb9EPty3lkxBaYpjL5BNRKSYOF9yOLe+JOcKFd+TSVeADQ4iSY7rbg==}
+  '@inquirer/password@4.0.17':
+    resolution: {integrity: sha512-DJolTnNeZ00E1+1TW+8614F7rOJJCM4y4BAGQ3Gq6kQIG+OJ4zr3GLjIjVVJCbKsk2jmkmv6v2kQuN/vriHdZA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@types/node': '>=18'
@@ -90,15 +77,6 @@ packages:
 
   '@inquirer/select@4.3.1':
     resolution: {integrity: sha512-Gfl/5sqOF5vS/LIrSndFgOh7jgoe0UXEizDqahFRkq5aJBLegZ6WjuMh/hVEJwlFQjyLq1z9fRtvUMkb7jM1LA==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@types/node': '>=18'
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-
-  '@inquirer/type@3.0.7':
-    resolution: {integrity: sha512-PfunHQcjwnju84L+ycmcMKB/pTPIngjUJvfnRhKY6FKPuYXlM4aQCb/nIdTFR6BEhMjFvngzvng/vBAJMZpLSA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@types/node': '>=18'
@@ -172,10 +150,6 @@ packages:
     resolution: {integrity: sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==}
     engines: {node: '>=6'}
 
-  filesize@10.1.6:
-    resolution: {integrity: sha512-sJslQKU2uM33qH5nqewAwVB2QgR6w1aMNsYUp3aN5rMRyXEwJGmZvaWzeJFNTOXWlHQyBFCWrdj3fV/fsTOX8w==}
-    engines: {node: '>= 10.4.0'}
-
   filesize@11.0.2:
     resolution: {integrity: sha512-s/iAeeWLk5BschUIpmdrF8RA8lhFZ/xDZgKw1Tan72oGws1/dFGB06nYEiyyssWUfjKNQTNRlrwMVjO9/hvXDw==}
     engines: {node: '>= 10.4.0'}
@@ -220,8 +194,8 @@ packages:
     resolution: {integrity: sha512-iq6eVVI64nQQTRYq2KtEg2d2uU7LElhTJwsH4YzIHZshxlgZms/wIc4VoDQTlG/IvVIrBKG06CrZnp0qv7hkcQ==}
     engines: {node: '>=12'}
 
-  terabox-api@2.4.3:
-    resolution: {integrity: sha512-/FZht2vHE2UhDgpPpnUTwfGWcDxi0ICbr4LQCs+yRSkks0gHy/03RDPccXfzwRMHvjzzsgtVdwEbNqq2Hm8NeA==}
+  terabox-api@2.4.4:
+    resolution: {integrity: sha512-8f1jHSVMFA6PySUWs3eEazAauCQbRta6J9fdEMcDrvo0+fxx5VJj6/PZXXnK45j9pzv4h9TsC4xf0qIp8t3DZQ==}
 
   tldts-core@6.1.45:
     resolution: {integrity: sha512-5HhO4lUBhKL3kIKkDv5+DM6XfSlEKUT0hJK+w/nSY6JLNPhWYEII24Pp3FpVGtTfSB6IvDpIptIOgcrw/jhb6Q==}
@@ -276,19 +250,6 @@ packages:
 
 snapshots:
 
-  '@inquirer/core@10.1.14(@types/node@22.5.4)':
-    dependencies:
-      '@inquirer/figures': 1.0.12
-      '@inquirer/type': 3.0.7(@types/node@22.5.4)
-      ansi-escapes: 4.3.2
-      cli-width: 4.1.0
-      mute-stream: 2.0.0
-      signal-exit: 4.1.0
-      wrap-ansi: 6.2.0
-      yoctocolors-cjs: 2.1.2
-    optionalDependencies:
-      '@types/node': 22.5.4
-
   '@inquirer/core@10.1.15(@types/node@22.5.4)':
     dependencies:
       '@inquirer/figures': 1.0.13
@@ -302,21 +263,19 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.5.4
 
-  '@inquirer/figures@1.0.12': {}
-
   '@inquirer/figures@1.0.13': {}
 
-  '@inquirer/input@4.2.0(@types/node@22.5.4)':
+  '@inquirer/input@4.2.1(@types/node@22.5.4)':
     dependencies:
-      '@inquirer/core': 10.1.14(@types/node@22.5.4)
-      '@inquirer/type': 3.0.7(@types/node@22.5.4)
+      '@inquirer/core': 10.1.15(@types/node@22.5.4)
+      '@inquirer/type': 3.0.8(@types/node@22.5.4)
     optionalDependencies:
       '@types/node': 22.5.4
 
-  '@inquirer/password@4.0.16(@types/node@22.5.4)':
+  '@inquirer/password@4.0.17(@types/node@22.5.4)':
     dependencies:
-      '@inquirer/core': 10.1.14(@types/node@22.5.4)
-      '@inquirer/type': 3.0.7(@types/node@22.5.4)
+      '@inquirer/core': 10.1.15(@types/node@22.5.4)
+      '@inquirer/type': 3.0.8(@types/node@22.5.4)
       ansi-escapes: 4.3.2
     optionalDependencies:
       '@types/node': 22.5.4
@@ -328,10 +287,6 @@ snapshots:
       '@inquirer/type': 3.0.8(@types/node@22.5.4)
       ansi-escapes: 4.3.2
       yoctocolors-cjs: 2.1.2
-    optionalDependencies:
-      '@types/node': 22.5.4
-
-  '@inquirer/type@3.0.7(@types/node@22.5.4)':
     optionalDependencies:
       '@types/node': 22.5.4
 
@@ -382,8 +337,6 @@ snapshots:
 
   escalade@3.2.0: {}
 
-  filesize@10.1.6: {}
-
   filesize@11.0.2: {}
 
   get-caller-file@2.0.5: {}
@@ -418,10 +371,10 @@ snapshots:
     dependencies:
       ansi-regex: 6.1.0
 
-  terabox-api@2.4.3:
+  terabox-api@2.4.4:
     dependencies:
       crc-32: 1.2.2
-      filesize: 10.1.6
+      filesize: 11.0.2
       tough-cookie: 5.1.2
       undici: 7.12.0
 
