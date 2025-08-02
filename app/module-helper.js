@@ -67,6 +67,7 @@ async function selectAccount(config){
     }
     const answer = await select({
         message: '[INFO] Select Account:',
+        pageSize: 500,
         choices: accounts,
     });
     return answer;

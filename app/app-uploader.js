@@ -61,6 +61,8 @@ if(yargs.getArgv('help')){
     }
     
     await showAccountInfo(app);
+    const upload_host = await app.getUploadHost();
+    
     await selectDirs();
 })();
 
