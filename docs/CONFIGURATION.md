@@ -5,7 +5,7 @@ Install GIT, NodeJS (v.20+) and PNPM.
 git clone --depth 1 --branch <version> https://github.com/seiya-dev/terabox-node
 cd terabox-node
 pnpm i
-pnpm link -g
+pnpm link
 ```
 
 ## Auth cookies

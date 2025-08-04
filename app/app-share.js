@@ -23,9 +23,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const config = loadYaml(path.resolve(__dirname, './.config.yaml'));
 const meta = loadYaml(path.resolve(__dirname, '../package.json'));
 
-console.log(`[INFO] ${meta.name_ext} v${meta.version} (FileManager Module)`);
+console.log(`[INFO] ${meta.name_ext} v${meta.version} (Share Module)`);
 
-const yargs = new Argv(config, ['a','r']);
+const yargs = new Argv(config, ['a']);
 if(yargs.getArgv('help')){
     yargs.showHelp();
     process.exit();
@@ -66,37 +66,31 @@ async function doFM(){
     console.log();
     await showAccountInfo(app);
     
-    const remotePath = await selectRemotePath(yargs.getArgv('r'));
-    const remotePathData = await app.getRemoteDir(remotePath);
-    console.log();
+    const mode = await select({
+        message: '[INFO] Select Mode:',
+        choices: ['create', 'revoke', 'list'],
+    });
     
-    if(remotePathData.errno == 0){
-        console.log(':: Selected Remote Path:', remotePath, '\n');
+    if(mode == 'list'){
+        const shareList = await app.shareList();
+        console.log(shareList);
         
-        const mode = await select({
-            message: '[INFO] Select Mode:',
-            choices: ['copy', 'move', 'rename', 'delete'],
-        });
-        
-        if(mode == 'delete'){
-            const fmDelete = await app.filemanager(mode, [remotePath]);
-            console.log(fmDelete);
-            
-            return;
-        }
-        
-        if(mode == 'rename'){
-            const newname = await input({ message: 'New Name:' });
-            
-            const fmRename = await app.filemanager(mode, [{
-                "path": remotePath,
-                "newname": newname,
-            }]);
-            console.log(fmRename);
-            
-            return;
-        }
-        
-        console.log('[WARN] Not Implemented!');
+        return;
     }
+    
+    if(mode == 'create'){
+        const remotePath = await selectRemotePath();
+        const remotePathData = await app.getRemoteDir(remotePath);
+        
+        if(remotePathData.errno == 0){
+            console.log(':: Selected Remote Path:', remotePath, '\n');
+            const createLink = await app.shareSet([remotePath]);
+            
+            console.log(createLink);
+        }
+        
+        return;
+    }
+    
+    console.log('[WARN] Not Implemented!');
 }
