@@ -30,8 +30,8 @@ importers:
         specifier: ^2.4.4
         version: 2.4.4
       tough-cookie:
-        specifier: ^5.1.2
-        version: 5.1.2
+        specifier: ^6.0.0
+        version: 6.0.0
       undici:
         specifier: ^7.13.0
         version: 7.13.0
@@ -200,12 +200,23 @@ packages:
   tldts-core@6.1.45:
     resolution: {integrity: sha512-5HhO4lUBhKL3kIKkDv5+DM6XfSlEKUT0hJK+w/nSY6JLNPhWYEII24Pp3FpVGtTfSB6IvDpIptIOgcrw/jhb6Q==}
 
+  tldts-core@7.0.11:
+    resolution: {integrity: sha512-65eeOpBwWBabh0XqT+zB0vEllq/V3XcrF2fhgMXWWFfNw1yxEjeYg9Vv/B/UNozd0CTR/TohO1ubfn6O6mBW3w==}
+
   tldts@6.1.45:
     resolution: {integrity: sha512-7wj/uWW1vk+wp9WgLwUmah2DeWdHuF9oLx83IwJH4ZbhRhqKd1h9sL4vkaRMZHLVmlQcPvhqQNiRpFNPJAfIOw==}
     hasBin: true
 
+  tldts@7.0.11:
+    resolution: {integrity: sha512-7k7JV/LZpGhFUu2t+YDaMZ1wdPPRNpaCYNQ0NQbSLY3Rbgy+XbCdkXyqRiS9TLXiYAsrv0yiA0OvnxmgRFCdNA==}
+    hasBin: true
+
   tough-cookie@5.1.2:
     resolution: {integrity: sha512-FVDYdxtnj0G6Qm/DhNPSb8Ju59ULcup3tuJxkFb5K8Bv2pUXILbf0xZWU8PX8Ov19OXljbUyveOFwRMwkXzO+A==}
+    engines: {node: '>=16'}
+
+  tough-cookie@6.0.0:
+    resolution: {integrity: sha512-kXuRi1mtaKMrsLUxz3sQYvVl37B0Ns6MzfrtV5DvJceE9bPyspOqk9xxv7XbZWcfLWbFmm997vl83qUWVJA64w==}
     engines: {node: '>=16'}
 
   type-fest@0.21.3:
@@ -380,13 +391,23 @@ snapshots:
 
   tldts-core@6.1.45: {}
 
+  tldts-core@7.0.11: {}
+
   tldts@6.1.45:
     dependencies:
       tldts-core: 6.1.45
 
+  tldts@7.0.11:
+    dependencies:
+      tldts-core: 7.0.11
+
   tough-cookie@5.1.2:
     dependencies:
       tldts: 6.1.45
+
+  tough-cookie@6.0.0:
+    dependencies:
+      tldts: 7.0.11
 
   type-fest@0.21.3: {}
 
