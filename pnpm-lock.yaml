@@ -27,8 +27,8 @@ importers:
         specifier: ^0.12.0
         version: 0.12.0
       terabox-api:
-        specifier: ^2.4.5
-        version: 2.4.5
+        specifier: ^2.5.0
+        version: 2.5.0
       tough-cookie:
         specifier: ^6.0.0
         version: 6.0.0
@@ -194,26 +194,15 @@ packages:
     resolution: {integrity: sha512-iq6eVVI64nQQTRYq2KtEg2d2uU7LElhTJwsH4YzIHZshxlgZms/wIc4VoDQTlG/IvVIrBKG06CrZnp0qv7hkcQ==}
     engines: {node: '>=12'}
 
-  terabox-api@2.4.5:
-    resolution: {integrity: sha512-0hD5Ni7HAiDWJPJIUzDQ7HYTjsJ8fEQgC2YrWX6Yv5+6HNqvTgKStHO50feX8WRDrfupLoYSrDHxvAOOWJkfkw==}
-
-  tldts-core@6.1.86:
-    resolution: {integrity: sha512-Je6p7pkk+KMzMv2XXKmAE3McmolOQFdxkKw0R8EYNr7sELW46JqnNeTX8ybPiQgvg1ymCoF8LXs5fzFaZvJPTA==}
+  terabox-api@2.5.0:
+    resolution: {integrity: sha512-1A7+sxeQ1NaI4OQU6ITOXIlHN48fij09W5diVDB/zrQ0hA8Kv3UZFYxoiD9h2cCzfDz4jQx3FMWlhPzlpzEMSg==}
 
   tldts-core@7.0.11:
     resolution: {integrity: sha512-65eeOpBwWBabh0XqT+zB0vEllq/V3XcrF2fhgMXWWFfNw1yxEjeYg9Vv/B/UNozd0CTR/TohO1ubfn6O6mBW3w==}
 
-  tldts@6.1.86:
-    resolution: {integrity: sha512-WMi/OQ2axVTf/ykqCQgXiIct+mSQDFdH2fkwhPwgEwvJ1kSzZRiinb0zF2Xb8u4+OqPChmyI6MEu4EezNJz+FQ==}
-    hasBin: true
-
   tldts@7.0.11:
     resolution: {integrity: sha512-7k7JV/LZpGhFUu2t+YDaMZ1wdPPRNpaCYNQ0NQbSLY3Rbgy+XbCdkXyqRiS9TLXiYAsrv0yiA0OvnxmgRFCdNA==}
     hasBin: true
-
-  tough-cookie@5.1.2:
-    resolution: {integrity: sha512-FVDYdxtnj0G6Qm/DhNPSb8Ju59ULcup3tuJxkFb5K8Bv2pUXILbf0xZWU8PX8Ov19OXljbUyveOFwRMwkXzO+A==}
-    engines: {node: '>=16'}
 
   tough-cookie@6.0.0:
     resolution: {integrity: sha512-kXuRi1mtaKMrsLUxz3sQYvVl37B0Ns6MzfrtV5DvJceE9bPyspOqk9xxv7XbZWcfLWbFmm997vl83qUWVJA64w==}
@@ -382,28 +371,18 @@ snapshots:
     dependencies:
       ansi-regex: 6.1.0
 
-  terabox-api@2.4.5:
+  terabox-api@2.5.0:
     dependencies:
       crc-32: 1.2.2
       filesize: 11.0.2
-      tough-cookie: 5.1.2
+      tough-cookie: 6.0.0
       undici: 7.14.0
 
-  tldts-core@6.1.86: {}
-
   tldts-core@7.0.11: {}
-
-  tldts@6.1.86:
-    dependencies:
-      tldts-core: 6.1.86
 
   tldts@7.0.11:
     dependencies:
       tldts-core: 7.0.11
-
-  tough-cookie@5.1.2:
-    dependencies:
-      tldts: 6.1.86
 
   tough-cookie@6.0.0:
     dependencies:
