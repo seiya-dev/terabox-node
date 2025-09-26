@@ -26,7 +26,7 @@
         "@inquirer/password": "^4.0.18",
         "@inquirer/select": "^4.3.2",
         "dateformat": "^5.0.3",
-        "filesize": "^11.0.2",
+        "filesize": "^11.0.13",
         "qrcode-terminal": "^0.12.0",
         "terabox-api": "^2.5.0",
         "tough-cookie": "^6.0.0",

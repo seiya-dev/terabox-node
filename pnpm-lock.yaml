@@ -21,8 +21,8 @@ importers:
         specifier: ^5.0.3
         version: 5.0.3
       filesize:
-        specifier: ^11.0.2
-        version: 11.0.2
+        specifier: ^11.0.13
+        version: 11.0.13
       qrcode-terminal:
         specifier: ^0.12.0
         version: 0.12.0
@@ -150,9 +150,9 @@ packages:
     resolution: {integrity: sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==}
     engines: {node: '>=6'}
 
-  filesize@11.0.2:
-    resolution: {integrity: sha512-s/iAeeWLk5BschUIpmdrF8RA8lhFZ/xDZgKw1Tan72oGws1/dFGB06nYEiyyssWUfjKNQTNRlrwMVjO9/hvXDw==}
-    engines: {node: '>= 10.4.0'}
+  filesize@11.0.13:
+    resolution: {integrity: sha512-mYJ/qXKvREuO0uH8LTQJ6v7GsUvVOguqxg2VTwQUkyTPXXRRWPdjuUPVqdBrJQhvci48OHlNGRnux+Slr2Rnvw==}
+    engines: {node: '>= 10.8.0'}
 
   get-caller-file@2.0.5:
     resolution: {integrity: sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg==}
@@ -337,7 +337,7 @@ snapshots:
 
   escalade@3.2.0: {}
 
-  filesize@11.0.2: {}
+  filesize@11.0.13: {}
 
   get-caller-file@2.0.5: {}
 
@@ -374,7 +374,7 @@ snapshots:
   terabox-api@2.5.0:
     dependencies:
       crc-32: 1.2.2
-      filesize: 11.0.2
+      filesize: 11.0.13
       tough-cookie: 6.0.0
       undici: 7.16.0
 
