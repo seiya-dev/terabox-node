@@ -24,7 +24,7 @@
     "dependencies": {
         "@inquirer/input": "^4.2.4",
         "@inquirer/password": "^4.0.20",
-        "@inquirer/select": "^4.3.4",
+        "@inquirer/select": "^4.4.0",
         "dateformat": "^5.0.3",
         "filesize": "^11.0.13",
         "qrcode-terminal": "^0.12.0",
