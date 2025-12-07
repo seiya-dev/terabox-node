@@ -246,6 +246,8 @@ async function uploadDir(localDir, remoteDir){
         }
         
         // const maxTasks = data.size <= 4 * Math.pow(1024, 3) ? 10 : 5;
+        app.TERABOX_TIMEOUT = data.size > 4 * Math.pow(1024, 3) ? 20000 : 10000;
+        
         const upload_status = await uploadChunks(app, data, filePath);
         delete data.uploaded;
         
