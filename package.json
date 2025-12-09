@@ -28,7 +28,7 @@
         "dateformat": "^5.0.3",
         "filesize": "^11.0.13",
         "qrcode-terminal": "^0.12.0",
-        "terabox-api": "^2.5.0",
+        "terabox-api": "^2.5.1",
         "tough-cookie": "^6.0.0",
         "undici": "^7.16.0",
         "yaml": "^2.8.2",
