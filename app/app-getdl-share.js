@@ -5,7 +5,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'url';
 import { request } from 'undici';
-import input from '@inquirer/input';
+import { input } from '@inquirer/prompts';
 
 import Argv from './module-argv.js';
 import TeraBoxApp from 'terabox-api';

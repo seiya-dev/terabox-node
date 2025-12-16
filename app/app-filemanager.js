@@ -4,8 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import input from '@inquirer/input';
-import select from '@inquirer/select';
+import { input, select } from '@inquirer/prompts';
 
 import Argv from './module-argv.js';
 import TeraBoxApp from 'terabox-api';

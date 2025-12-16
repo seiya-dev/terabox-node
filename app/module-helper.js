@@ -1,8 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import input from '@inquirer/input';
-import select from '@inquirer/select';
+import { input, select } from '@inquirer/prompts';
 
 import dateFormat from 'dateformat';
 import { filesize } from 'filesize';

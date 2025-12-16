@@ -8,8 +8,7 @@ import {loadYaml} from './module-helper.js';
 import Argv from './module-argv.js';
 
 import TeraBoxApp from 'terabox-api';
-import input from '@inquirer/input';
-import password from '@inquirer/password';
+import { input, password } from '@inquirer/prompts';
 
 // init app
 let app = {};
