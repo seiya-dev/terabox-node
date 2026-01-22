@@ -24,8 +24,8 @@ importers:
         specifier: ^0.12.0
         version: 0.12.0
       terabox-api:
-        specifier: ^2.5.1
-        version: 2.5.1
+        specifier: ^2.6.2
+        version: 2.6.2
       terabox-node:
         specifier: 'link:'
         version: 'link:'
@@ -252,8 +252,8 @@ packages:
     resolution: {integrity: sha512-iq6eVVI64nQQTRYq2KtEg2d2uU7LElhTJwsH4YzIHZshxlgZms/wIc4VoDQTlG/IvVIrBKG06CrZnp0qv7hkcQ==}
     engines: {node: '>=12'}
 
-  terabox-api@2.5.1:
-    resolution: {integrity: sha512-cqG7E5Q3M8ISyid1PwVekNviQmNjPW2sKHAEE+T94fduMlNiH90/F5PiwNnSDgPnJLv2D+cY9AgK4joAIRDxkg==}
+  terabox-api@2.6.2:
+    resolution: {integrity: sha512-bs122JrWm6x0weXnx5tWF4gS9M1dSko7DYkU78kQU3PezEFiLneTeM1gqIHpw+seXvu9P49tqOOWs9QI63dp2w==}
 
   tldts-core@7.0.11:
     resolution: {integrity: sha512-65eeOpBwWBabh0XqT+zB0vEllq/V3XcrF2fhgMXWWFfNw1yxEjeYg9Vv/B/UNozd0CTR/TohO1ubfn6O6mBW3w==}
@@ -438,7 +438,7 @@ snapshots:
     dependencies:
       ansi-regex: 6.1.0
 
-  terabox-api@2.5.1:
+  terabox-api@2.6.2:
     dependencies:
       crc-32: 1.2.2
       filesize: 11.0.13
