@@ -33,8 +33,8 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
       undici:
-        specifier: ^7.19.0
-        version: 7.19.0
+        specifier: ^7.19.1
+        version: 7.19.1
       yaml:
         specifier: ^2.8.2
         version: 2.8.2
@@ -278,8 +278,8 @@ packages:
     resolution: {integrity: sha512-kXuRi1mtaKMrsLUxz3sQYvVl37B0Ns6MzfrtV5DvJceE9bPyspOqk9xxv7XbZWcfLWbFmm997vl83qUWVJA64w==}
     engines: {node: '>=16'}
 
-  undici@7.19.0:
-    resolution: {integrity: sha512-Heho1hJD81YChi+uS2RkSjcVO+EQLmLSyUlHyp7Y/wFbxQaGb4WXVKD073JytrjXJVkSZVzoE2MCSOKugFGtOQ==}
+  undici@7.19.1:
+    resolution: {integrity: sha512-Gpq0iNm5M6cQWlyHQv9MV+uOj1jWk7LpkoE5vSp/7zjb4zMdAcUD+VL5y0nH4p9EbUklq00eVIIX/XcDHzu5xg==}
     engines: {node: '>=20.18.1'}
 
   wrap-ansi@9.0.0:
@@ -463,7 +463,7 @@ snapshots:
       crc-32: 1.2.2
       filesize: 11.0.13
       tough-cookie: 6.0.0
-      undici: 7.19.0
+      undici: 7.19.1
 
   tldts-core@7.0.11: {}
 
@@ -475,7 +475,7 @@ snapshots:
     dependencies:
       tldts: 7.0.11
 
-  undici@7.19.0: {}
+  undici@7.19.1: {}
 
   wrap-ansi@9.0.0:
     dependencies:
