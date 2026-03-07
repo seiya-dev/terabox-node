@@ -1,7 +1,7 @@
 {
     "name": "terabox-node",
     "name_ext": "TeraBox node",
-    "version": "3.2.2",
+    "version": "3.3.0",
     "type": "module",
     "bin": {
         "tb-check": "app/app-check.js",
@@ -13,6 +13,7 @@
         "tb-getdl-share": "app/app-getdl-share.js",
         "tb-mkhash": "app/app-mktbhash.js",
         "tb-upload": "app/app-uploader.js",
+        "tb-clouddl": "app/app-clouddl.js",
         "tb-share": "app/app-share.js"
     },
     "keywords": [
@@ -23,10 +24,11 @@
     "description": "NodeJS tool for interacting with the TeraBox cloud service without the need to use the website or app ☁️",
     "dependencies": {
         "@inquirer/prompts": "^8.3.0",
+        "cli-progress": "^3.12.0",
         "dateformat": "^5.0.3",
         "filesize": "^11.0.13",
         "qrcode-terminal": "^0.12.0",
-        "terabox-api": "^2.7.1",
+        "terabox-api": "^2.8.0",
         "terabox-node": "link:",
         "tough-cookie": "^6.0.0",
         "undici": "^7.22.0",
