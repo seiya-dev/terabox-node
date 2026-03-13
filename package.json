@@ -30,7 +30,7 @@
         "qrcode-terminal": "^0.12.0",
         "terabox-api": "^2.8.0",
         "terabox-node": "link:",
-        "tough-cookie": "^6.0.0",
+        "tough-cookie": "^6.0.1",
         "undici": "^7.22.0",
         "yaml": "^2.8.2",
         "yargs": "^18.0.0"
