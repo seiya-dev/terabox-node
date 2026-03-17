@@ -14,6 +14,7 @@ import { formatEta                      } from 'terabox-api/helper.js';
 // TB App
 import cliProgress from 'cli-progress';
 import TeraBoxApp from 'terabox-api';
+import Argv from './module-argv.js';
 
 // init app
 let app = {};
