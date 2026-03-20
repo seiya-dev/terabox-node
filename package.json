@@ -31,7 +31,7 @@
         "terabox-api": "^2.8.0",
         "terabox-node": "link:",
         "tough-cookie": "^6.0.0",
-        "undici": "^7.22.0",
+        "undici": "^7.24.5",
         "yaml": "^2.8.2",
         "yargs": "^18.0.0"
     }
