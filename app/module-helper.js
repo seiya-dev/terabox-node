@@ -84,6 +84,12 @@ async function showAccountInfo(app){
     const spaceFree = filesize(acc_quota.available, {standard: 'iec', round: 3, pad: true});
     console.info('[INFO] Space:', spaceFree, '/', spaceTotal, '[FREE / TOTAL]');
     
+    let extra = '[INFO] Extra: ' + acc_quota.extra.init_quota_type
+    if(acc_quota.extra.time_limit_quota_expire_time > 0){
+        extra += ` [Expire: ${dateFormat(acc_quota.extra.time_limit_quota_expire_time * 1000, 'UTC:yyyy-mm-dd')}]`;
+    }
+    console.log(extra);
+    
     if(app.params.is_vip){
         const acc_data = await app.userMembership();
         
