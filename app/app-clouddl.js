@@ -174,15 +174,16 @@ async function deleteTasks(tIds){
 }
 
 const statuses = { 
-    '0': 'DONE!   ',
-    '1': 'DOWNLOAD',
-    '2': 'SYS ERR ',
-    '3': 'NO RES  ',
-    '4': 'TIMEOUT ',
-    '5': 'FAILED  ',
-    '6': 'NO SPACE',
-    '7': 'EXISTS  ',
-    '8': 'CANCELED',
+    '0' : 'DONE!   ',
+    '1' : 'DOWNLOAD',
+    '2' : 'SYS ERR ',
+    '3' : 'NO RES  ',
+    '4' : 'TIMEOUT ',
+    '5' : 'FAILED  ',
+    '6 ': 'NO SPACE',
+    '7' : 'EXISTS  ',
+    '8' : 'CANCELED',
+    '10': 'Part. up',
 }
 
 const previousStats = new Map();
