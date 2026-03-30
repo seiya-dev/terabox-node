@@ -26,7 +26,7 @@
         "@inquirer/prompts": "^8.3.0",
         "cli-progress": "^3.12.0",
         "dateformat": "^5.0.3",
-        "filesize": "^11.0.13",
+        "filesize": "^11.0.15",
         "qrcode-terminal": "^0.12.0",
         "terabox-api": "^2.8.0",
         "terabox-node": "link:",
