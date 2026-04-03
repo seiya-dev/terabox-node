@@ -84,11 +84,16 @@ async function showAccountInfo(app){
     const spaceFree = filesize(acc_quota.available, {standard: 'iec', round: 3, pad: true});
     console.info('[INFO] Space:', spaceFree, '/', spaceTotal, '[FREE / TOTAL]');
     
-    let extra = '[INFO] Extra: ' + acc_quota.extra.init_quota_type
     if(acc_quota.extra.time_limit_quota_expire_time > 0){
-        extra += ` [Expire: ${dateFormat(acc_quota.extra.time_limit_quota_expire_time * 1000, 'UTC:yyyy-mm-dd')}]`;
+        const init_quota_type = acc_quota.extra.init_quota_type;
+        const time_left_extra = acc_quota.extra.time_limit_quota_expire_time * 1000;
+        const time_left_extra_days = Math.floor((time_left_extra - Date.now()) / (24*60*60*1000))
+        const time_left_extra_str = dateFormat(time_left_extra, 'UTC:yyyy-mm-dd');
+        
+        // extra account info
+        console.log('[INFO] Extra:', acc_quota.extra.init_quota_type);
+        console.log('[INFO] Extra: Expire on', time_left_extra_str, '/', time_left_extra_days, 'days left');
     }
-    console.log(extra);
     
     if(app.params.is_vip){
         const acc_data = await app.userMembership();
@@ -97,7 +102,7 @@ async function showAccountInfo(app){
         const vip_left_time = Math.floor(acc_data.data.member_info.vip_left_time / (24*60*60));
         
         const vip_end_date = dateFormat(vip_end_time, 'UTC:yyyy-mm-dd');
-        console.info('[INFO] VIP: End on', vip_end_date, '/', vip_left_time, 'days left'); 
+        console.info('[INFO] VIP: Expire on', vip_end_date, '/', vip_left_time, 'days left'); 
     }
 }
 
