@@ -27,7 +27,7 @@ const REFRESH_INTERVAL = 5000;
 
 console.log(`[INFO] ${meta.name_ext} v${meta.version} (CloudDL Module)`);
 
-const yargs = new Argv(config, ['a']);
+const yargs = new Argv(config, ['a','clouddl-mode']);
 if(yargs.getArgv('help')){
     yargs.showHelp();
     process.exit();
@@ -67,10 +67,16 @@ async function startApiSequence(){
         { name: 'remove tasks', value: 'remove' },
     ];
     
-    const mode = await select({
-        message: 'Select Mode:',
-        choices: modeList,
-    });
+    let mode;
+    if(typeof yargs.getArgv('clouddl-mode') == 'string'){
+        mode = yargs.getArgv('clouddl-mode');
+    }
+    else{
+        mode = await select({
+            message: 'Select Mode:',
+            choices: modeList,
+        });
+    }
     
     if(mode == 'monitor'){
         const taskIds = await collectTasks();
@@ -140,7 +146,6 @@ async function collectTasks(is_all = false){
 async function createTask(upfld, src){
     const rUpload1 = await app.clouddl_query_sinfo(upfld + src);
     const idxList = [
-        { name: 'skip files', value: '-1' },
         { name: 'all files', value: '0' },
     ];
     
@@ -154,7 +159,7 @@ async function createTask(upfld, src){
             choices: idxList,
         });
         
-        if(selectedIndex.length > 0 && !selectedIndex.includes('-1')){
+        if(selectedIndex.length > 0){
             const selFiles = selectedIndex.includes('0') ? Array.from({ length: rUpload1.torrent_info.file_count }, (_, i) => 1 + i).join(',') : selectedIndex.join(',');
             console.log('Selected Index:', selFiles);
             const rUpload2 = await app.clouddl_add_task(upfld + src, rUpload1.torrent_info.sha1, selFiles, upfld);

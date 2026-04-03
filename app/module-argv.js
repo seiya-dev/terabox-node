@@ -66,6 +66,13 @@ class Args {
                         type: 'boolean',
                     };
                     break;
+                case 'clouddl-mode':
+                    yargsOpts[a] = {
+                        describe: 'CloudDL mode select',
+                        choices: ['monitor','add','remove'],
+                        type: 'string',
+                    };
+                    break;
             }
         }
         
