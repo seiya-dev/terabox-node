@@ -23,16 +23,16 @@
     "license": "MIT",
     "description": "NodeJS tool for interacting with the TeraBox cloud service without the need to use the website or app ☁️",
     "dependencies": {
-        "@inquirer/prompts": "^8.3.0",
+        "@inquirer/prompts": "^8.3.2",
         "cli-progress": "^3.12.0",
         "dateformat": "^5.0.3",
-        "filesize": "^11.0.13",
+        "filesize": "^11.0.15",
         "qrcode-terminal": "^0.12.0",
-        "terabox-api": "^2.8.0",
+        "terabox-api": "^2.9.0",
         "terabox-node": "link:",
-        "tough-cookie": "^6.0.0",
-        "undici": "^7.22.0",
-        "yaml": "^2.8.2",
+        "tough-cookie": "^6.0.1",
+        "undici": "^8.0.1",
+        "yaml": "^2.8.3",
         "yargs": "^18.0.0"
     }
 }
