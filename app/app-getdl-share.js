@@ -102,18 +102,21 @@ async function getShareDL(argv_surl){
         }
     }
     else{
-        console.error(`[ERROR] Error #${shareInfo.errno}. BAD Share URL.`);
+        const errorText = shareInfo.show_msg != '' ? shareInfo.show_msg : 'BAD Share URL';
+        console.error(`[ERROR] Error #${shareInfo.errno}. ${shareInfo.show_msg}.`);
         return;
     }
     
     if(sFsList.length > 0){
         const fsList = [];
         for(const f of sFsList){
-            fsList.push({
+            const fsData = {
                 path: f.path,
                 filename: f.server_filename,
                 dlink: f.dlink + '&origin=dlna',
-            });
+            };
+            // console.log(fsData);
+            fsList.push(fsData);
         }
         await addDownloads(fsList);
         return;
