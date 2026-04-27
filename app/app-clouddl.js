@@ -8,8 +8,8 @@ import { filesize            } from 'filesize'
 import { checkbox, select    } from '@inquirer/prompts';
 
 // main api/app
-import { selectAccount, loadYaml, delay } from './module-helper.js';
-import { formatEta                      } from 'terabox-api/helper.js';
+import { selectAccount, showAccountInfo, loadYaml, delay } from './module-helper.js';
+import { formatEta                                       } from 'terabox-api/helper.js';
 
 // TB App
 import cliProgress from 'cli-progress';
@@ -23,7 +23,7 @@ const config = loadYaml(path.resolve(__dirname, './.config.yaml'));
 const meta = loadYaml(path.resolve(__dirname, '../package.json'));
 
 // specific configs
-const REFRESH_INTERVAL = 5000;
+const REFRESH_INTERVAL = 1000;
 
 console.log(`[INFO] ${meta.name_ext} v${meta.version} (CloudDL Module)`);
 
@@ -60,6 +60,9 @@ if(yargs.getArgv('help')){
 
 async function startApiSequence(){
     await app.updateAppData();
+    
+    await showAccountInfo(app);
+    console.log();
     
     const modeList = [
         { name: 'monitor tasks', value: 'monitor' },
@@ -212,7 +215,7 @@ const multibar = new cliProgress.MultiBar(
     {
         clearOnComplete: false,
         hideCursor: true,
-        format: '{name}: {status} |{bar}| {percentHR}% | {valueHR}/{remainingHR}/{totalHR} | {speedHR}/s | ETA: {etaHR}',
+        format: '{name}: {status} |{bar}| {percentHR}% | {valueHR}/{remainingHR}/{totalHR} | {speedHR}/s | {timeSpent} | ETA: {etaHR}',
     },
     cliProgress.Presets.shades_classic
 );
@@ -220,31 +223,41 @@ const multibar = new cliProgress.MultiBar(
 const bars = new Map();
 function updateBars(data) {
     for (const [taskId, t] of Object.entries(data.task_info)) {
-        const total = Number(t.file_size || 0);
+        
+        t.finished_size = Number(t.finished_size || 0);
+        t.start_time = Number(t.start_time || 0) * 1000;
+        t.file_size = Number(t.file_size || 0);
+        const total = t.file_size;
         
         if (!bars.has(taskId)) {
-            bars.set(taskId, multibar.create(total, 0, {name: taskId}));
+            bars.set(taskId, multibar.create(t.file_size, 0, {name: taskId}));
         }
         
-        const finished = Number(t.finished_size || 0);
+        if(total == 0){
+            continue;
+        }
+        
+        const bar = bars.get(taskId);
+        if (bar.getTotal() == 0) {
+            bar.setTotal(total);
+        }
+        
+        const finished = t.finished_size;
         const speedBps = calcSpeed(taskId, finished);
         const remaining = Math.max(0, total - finished);
         const etaSec = speedBps > 0 ? remaining / speedBps : NaN;
         
         const percent = total > 0 ? (finished / total) * 100 : 0;
-        const bar = bars.get(taskId);
-        
-        if (bar.getTotal() !== total) {
-            bar.setTotal(total);
-        }
+        const timeSpent = (Date.now() - t.start_time)/1000;
         
         bar.update(finished, {
-            status: statuses[t.status],
+            status:      statuses[t.status],
             percentHR:   percent.toFixed(2).padStart(6),
             valueHR:     fb2str(finished).padStart(11),
             remainingHR: fb2str(remaining).padStart(11),
             totalHR:     fb2str(total).padStart(11),
             speedHR:     fb2str(speedBps).padStart(11),
+            timeSpent:   formatEta(timeSpent).padStart(9),
             etaHR:       formatEta(etaSec).padStart(9),
         });
     }

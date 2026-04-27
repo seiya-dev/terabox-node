@@ -84,6 +84,10 @@ class Args {
         
         this.yargs.options(yargsOpts);
     }
+    addArgv(argObj){
+        this.yargs.options(argObj);
+        this._argv = null;
+    }
     getArgv(arg){
         return this.yargs.argv[arg];
     }
