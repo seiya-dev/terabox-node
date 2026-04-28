@@ -29,9 +29,6 @@ importers:
       terabox-api:
         specifier: ^2.9.2
         version: 2.9.2
-      terabox-node:
-        specifier: 'link:'
-        version: 'link:'
       tough-cookie:
         specifier: ^6.0.1
         version: 6.0.1
