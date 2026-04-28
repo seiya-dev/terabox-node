@@ -93,6 +93,12 @@ async function startApiSequence(){
         const remFiles = await app.search('.torrent');
         const torrents = remFiles.list.filter(f => f.isdir === 0 && f.category === 6 && f.path?.toLowerCase().endsWith('.torrent'));
         
+        torrents.sort((a, b) => {
+            if (a.path < b.path) return -1;
+            if (a.path > b.path) return 1;
+            return 0;
+        });
+        
         const selTorrent = [{ value: 'exit' }];
         for(const f of torrents){
             selTorrent.push({ name: f.path, value: { p: f.path.split('/').slice(0, -1).join('/'), t: f.server_filename }});
