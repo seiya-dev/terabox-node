@@ -24,7 +24,7 @@ console.log(`[INFO] ${meta.name_ext} v${meta.version} (GetShareDL Module)`);
 
 const yargs = new Argv(config, ['a','s','r']);
 yargs.addArgv({
-    'show_url': {
+    'showurl': {
         describe: 'show download urls',
         type: 'boolean',
     },
@@ -122,7 +122,7 @@ async function getShareDL(argv_surl){
                 filename: f.server_filename,
                 dlink: f.dlink.replace(/&chkv=0&chkbd=0&chkpc=&dp-logid=(\d+)&dp-callid=0&r=(\d+)&sh=1/, '') + '&origin=dlna',
             };
-            if(yargs.getArgv('show_url')){
+            if(yargs.getArgv('showurl')){
                 console.log('::','addedURL:', fsData.dlink);
             }
             fsList.push(fsData);
