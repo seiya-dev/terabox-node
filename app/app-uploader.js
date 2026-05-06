@@ -33,6 +33,13 @@ const meta = loadYaml(path.resolve(__dirname, '../package.json'));
 console.log(`[INFO] ${meta.name_ext} v${meta.version} (Uploader Module)`);
 
 const yargs = new Argv(config, ['a','l','r','no-rapidupload']);
+yargs.addArgv({
+    'savehash': {
+        describe: 'save .tbhash file after uploading',
+        type: 'boolean',
+    },
+});
+
 if(yargs.getArgv('help')){
     yargs.showHelp();
     process.exit();
@@ -192,6 +199,12 @@ async function uploadDir(localDir, remoteDir){
                     if(!isTBHash){
                         removeTbTemp(tbtempfile);
                     }
+                    if(yargs.getArgv('savehash') && !fs.existsSync(tbHashFile)){
+                        const tbHashData = {};
+                        tbHashData.size = data.size;
+                        tbHashData.hash = data.hash;
+                        saveYaml(tbHashFile, data);
+                    }
                     continue;
                 }
                 else if(rapidUploadData.errno == 404){
@@ -293,6 +306,15 @@ async function uploadDir(localDir, remoteDir){
                     // remove tbtemp file if everything is ok
                     console.log(':: File is OK!');
                     removeTbTemp(tbtempfile);
+                    
+                    // save tbhash file if needed
+                    if(yargs.getArgv('savehash') && !fs.existsSync(tbHashFile)){
+                        const tbHashData = {};
+                        tbHashData.size = data.size;
+                        tbHashData.hash = data.hash;
+                        saveYaml(tbHashFile, data);
+                    }
+                    
                     continue;
                 }
                 throw new Error('Bad Response', { cause: upload_info });
