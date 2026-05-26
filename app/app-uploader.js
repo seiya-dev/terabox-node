@@ -203,7 +203,7 @@ async function uploadDir(localDir, remoteDir){
                         const tbHashData = {};
                         tbHashData.size = data.size;
                         tbHashData.hash = data.hash;
-                        saveYaml(tbHashFile, data);
+                        saveYaml(tbHashFile, tbHashData);
                     }
                     continue;
                 }
@@ -312,7 +312,7 @@ async function uploadDir(localDir, remoteDir){
                         const tbHashData = {};
                         tbHashData.size = data.size;
                         tbHashData.hash = data.hash;
-                        saveYaml(tbHashFile, data);
+                        saveYaml(tbHashFile, tbHashData);
                     }
                     
                     continue;
