@@ -217,6 +217,10 @@ async function uploadDir(localDir, remoteDir){
                     console.warn(':: To use this feature you need accept one of');
                     console.warn('   referral program at https://www.terabox.com/webmaster');
                 }
+                if(rapidUploadData.errno == -10){
+                    console.error(':: ERROR: Exceed quota');
+                    continue;
+                }
             }
             catch(error){
                 console.error(':: Failed to RapidUpload file:', unwrapErrorMessage(error));
@@ -315,6 +319,10 @@ async function uploadDir(localDir, remoteDir){
                         saveYaml(tbHashFile, tbHashData);
                     }
                     
+                    continue;
+                }
+                if(upload_info.errno == -10){
+                    console.error(':: ERROR: Exceed quota');
                     continue;
                 }
                 throw new Error('Bad Response', { cause: upload_info });

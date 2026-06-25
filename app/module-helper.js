@@ -81,17 +81,19 @@ async function showAccountInfo(app){
     
     const spaceUsed = filesize(acc_quota.used, {standard: 'iec', round: 3, pad: true});
     const spaceTotal = filesize(acc_quota.total, {standard: 'iec', round: 3, pad: true});
-    const spaceFree = filesize(acc_quota.available, {standard: 'iec', round: 3, pad: true});
-    console.info('[INFO] Space:', spaceFree, '/', spaceTotal, '[FREE / TOTAL]');
+    const spaceFree = filesize(Math.max(0, acc_quota.available), {standard: 'iec', round: 3, pad: true});
+    console.info('[INFO] Space:', spaceUsed, '/', spaceFree, '/', spaceTotal, '[USED / FREE / TOTAL]');
     
     if(acc_quota.extra.time_limit_quota_expire_time > 0){
         const time_left_extra = acc_quota.extra.time_limit_quota_expire_time * 1000;
-        const time_left_extra_days = Math.floor((time_left_extra - Date.now()) / (24*60*60*1000))
+        const time_left_extra_days = Math.max(0, Math.floor((time_left_extra - Date.now()) / (24*60*60*1000)))
         const time_left_extra_str = dateFormat(time_left_extra, 'UTC:yyyy-mm-dd');
         
         // extra account info
-        console.log('[INFO] Extra:', acc_quota.extra.init_quota_type);
-        console.log('[INFO] Extra: Expire on', time_left_extra_str, '/', time_left_extra_days, 'days left');
+        if(time_left_extra_days >= 0){
+            console.log('[INFO] Extra:', acc_quota.extra.init_quota_type);
+            console.log('[INFO] Extra: Expire on', time_left_extra_str, '/', time_left_extra_days, 'days left');
+        }
     }
     
     if(app.params.is_vip){
