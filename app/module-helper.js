@@ -86,7 +86,7 @@ async function showAccountInfo(app){
     
     if(acc_quota.extra.time_limit_quota_expire_time > 0){
         const time_left_extra = acc_quota.extra.time_limit_quota_expire_time * 1000;
-        const time_left_extra_days = Math.max(0, Math.floor((time_left_extra - Date.now()) / (24*60*60*1000)))
+        const time_left_extra_days = Math.floor((time_left_extra - Date.now()) / (24*60*60*1000))
         const time_left_extra_str = dateFormat(time_left_extra, 'UTC:yyyy-mm-dd');
         
         // extra account info
