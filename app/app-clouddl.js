@@ -28,6 +28,20 @@ const REFRESH_INTERVAL = 1000;
 console.log(`[INFO] ${meta.name_ext} v${meta.version} (CloudDL Module)`);
 
 const yargs = new Argv(config, ['a','clouddl-mode']);
+yargs.addArgv({
+    't': {
+        alias: 'torrent',
+        describe: 'select torrent by torrent remote path',
+        type: 'string',
+    },
+    i: {
+        alias: ['idx', 'index'],
+        describe: 'define torrent indexes coma-separated',
+        type: 'string',
+    }
+})
+
+
 if(yargs.getArgv('help')){
     yargs.showHelp();
     process.exit();
@@ -100,6 +114,7 @@ async function startApiSequence(){
         });
         
         const selTorrent = [{ value: 'exit' }];
+        
         for(const f of torrents){
             selTorrent.push({ name: f.path, value: { p: f.path.split('/').slice(0, -1).join('/'), t: f.server_filename }});
         }
@@ -108,10 +123,17 @@ async function startApiSequence(){
             return;
         }
         
-        const tfile = await select({
-            message: 'Select Torrent File:',
-            choices: selTorrent,
-        });
+        let tfile;
+        if(selTorrent.some(item => item.name === yargs.getArgv('t'))){
+            tfile = selTorrent.find(item => item.name === yargs.getArgv('t')).value;
+            console.log('✔ Select Torrent File:', yargs.getArgv('t'));
+        }
+        else{
+            tfile = await select({
+                message: 'Select Torrent File:',
+                choices: selTorrent,
+            });
+        }
         
         if(tfile === 'exit'){
             return;
@@ -163,10 +185,23 @@ async function createTask(upfld, src){
             idxList.push({ name: String(index+1).padStart(3) + ': ' + value.file_name + ` (${fb2str(Number(value.size))})`, value: String(index+1) });
         }
         
-        const selectedIndex = await checkbox({
+        let selIdx = yargs.getArgv('idx') ? yargs.getArgv('idx').split(",").map(v => String(Number(v.trim()))) : [];
+        selIdx = idxList.filter(item => selIdx.includes(item.value))
+        
+        let selectedIndex = selIdx.length > 0 ? selIdx : await checkbox({
             message: 'Select Files',
             choices: idxList,
         });
+        
+        if(selIdx.length > 0){
+            selectedIndex = [];
+            console.log('✔ Selected Files:');
+            for(const selFile of selIdx){
+                console.log(`> ${selFile.name}`);
+                selectedIndex.push(selFile.value);
+            }
+            
+        }
         
         if(selectedIndex.length > 0){
             const selFiles = selectedIndex.includes('0') ? Array.from({ length: rUpload1.torrent_info.file_count }, (_, i) => 1 + i).join(',') : selectedIndex.join(',');
@@ -235,19 +270,13 @@ function updateBars(data) {
         t.file_size = Number(t.file_size || 0);
         const total = t.file_size;
         
+        if (total <= 0) continue;
+        
         if (!bars.has(taskId)) {
             bars.set(taskId, multibar.create(t.file_size, 0, {name: taskId}));
         }
         
-        if(total == 0){
-            continue;
-        }
-        
         const bar = bars.get(taskId);
-        if (bar.getTotal() == 0) {
-            bar.setTotal(total);
-        }
-        
         const finished = t.finished_size;
         const speedBps = calcSpeed(taskId, finished);
         const remaining = Math.max(0, total - finished);
