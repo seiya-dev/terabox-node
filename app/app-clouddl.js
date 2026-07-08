@@ -124,7 +124,7 @@ async function startApiSequence(){
         }
         
         let tfile;
-        if(selTorrent.some(item => item.name === yargs.getArgv('t'))){
+        if(yargs.getArgv('t') && selTorrent.some(item => item.name === yargs.getArgv('t'))){
             tfile = selTorrent.find(item => item.name === yargs.getArgv('t')).value;
             console.log('✔ Select Torrent File:', yargs.getArgv('t'));
         }
