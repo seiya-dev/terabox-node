@@ -30,8 +30,8 @@ importers:
         specifier: ^2.9.2
         version: 2.9.2
       tough-cookie:
-        specifier: ^6.0.1
-        version: 6.0.1
+        specifier: ^6.0.2
+        version: 6.0.2
       undici:
         specifier: ^8.5.0
         version: 8.5.0
@@ -287,15 +287,15 @@ packages:
   terabox-api@2.9.2:
     resolution: {integrity: sha512-K5mUHbNQTAizVpmzs2rTkBs2FhGdfRf1YN3FNQHSUJo3f6YzU36zSEFKvgmjdK1sqDWe6BNvcW4RAV5Jfsp10g==}
 
-  tldts-core@7.4.4:
-    resolution: {integrity: sha512-vwVLJVvvpslm7vqAH7+XNj/neA/Ynq7DT2EEcMuwc5YzN5XaMyRAqxwU+uX3azZ1FQtB2gvrvnLnAEkvYlVdfg==}
+  tldts-core@7.4.7:
+    resolution: {integrity: sha512-rNlAI8fKn/JckBMUSbNL/ES2kmDiurWaE49l+ikwEc9A6lFR7gMx9AhgQMQKBK4H5w4pKLH64JzZfB99uRsGNQ==}
 
-  tldts@7.4.4:
-    resolution: {integrity: sha512-kFXFK7O4WPextIUAOk8qtnw9dxR9UIXP9CjuH1cTBVBZMDeQcUPgr/IazGiw1B0Yiw5L75gHLWeW4iD793r90g==}
+  tldts@7.4.7:
+    resolution: {integrity: sha512-56L0/9HELHSsG1bFCzay8UoLxzRL7kpFf7Wl5q/kSYwiSJGACvro61xnKzPNM+SadxllzdtXsKDSXE7HPeqIAw==}
     hasBin: true
 
-  tough-cookie@6.0.1:
-    resolution: {integrity: sha512-LktZQb3IeoUWB9lqR5EWTHgW/VTITCXg4D21M+lvybRVdylLrRMnqaIONLVb5mav8vM19m44HIcGq4qASeu2Qw==}
+  tough-cookie@6.0.2:
+    resolution: {integrity: sha512-exgYmnmL/sJpR3upZfXG5PoatXQii55xAiXGXzY+sROLZ/Y+SLcp9PgJNI9Vz37HpQ74WvDcLT8eqm+kV3FzrA==}
     engines: {node: '>=16'}
 
   undici@8.5.0:
@@ -500,18 +500,18 @@ snapshots:
     dependencies:
       crc-32: 1.2.2
       filesize: 11.0.17
-      tough-cookie: 6.0.1
+      tough-cookie: 6.0.2
       undici: 8.5.0
 
-  tldts-core@7.4.4: {}
+  tldts-core@7.4.7: {}
 
-  tldts@7.4.4:
+  tldts@7.4.7:
     dependencies:
-      tldts-core: 7.4.4
+      tldts-core: 7.4.7
 
-  tough-cookie@6.0.1:
+  tough-cookie@6.0.2:
     dependencies:
-      tldts: 7.4.4
+      tldts: 7.4.7
 
   undici@8.5.0: {}
 
