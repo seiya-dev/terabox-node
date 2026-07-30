@@ -204,7 +204,7 @@ async function uploadDir(localDir, remoteDir){
                     if(!isTBHash){
                         removeTbTemp(tbtempfile);
                     }
-                    if(yargs.getArgv('savehash') && !fs.existsSync(tbHashFile)){
+                    if(yargs.getArgv('savehash') && !fs.existsSync(tbHashFile) && !isTBHash){
                         const tbHashData = {};
                         tbHashData.size = data.size;
                         tbHashData.hash = data.hash;
