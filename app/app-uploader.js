@@ -213,7 +213,8 @@ async function uploadDir(localDir, remoteDir){
                     continue;
                 }
                 else if(rapidUploadData.errno == 404){
-                    console.log(`:: File Not Uploaded Yet:`, data.file, `(${data.size})`);
+                    const localFileSize = filesize(parseInt(data.size), {standard: 'iec', round: 3, pad: true});
+                    console.log(`:: File Not Uploaded Yet:`, data.file, `(${localFileSize})`);
                 }
                 else{
                     console.warn(':: Failed to RapidUpload file:', rapidUploadData);
@@ -268,7 +269,7 @@ async function uploadDir(localDir, remoteDir){
         }
         
         const maxTasks = data.size <= 4 * Math.pow(1024, 3) ? 10 : 5;
-        app.TERABOX_TIMEOUT = data.size > 4 * Math.pow(1024, 3) ? 20000 : 10000;
+        app.TERABOX_TIMEOUT = 60000;
         
         const upload_status = await uploadChunks(app, data, filePath, maxTasks);
         delete data.uploaded;
