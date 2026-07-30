@@ -191,7 +191,14 @@ async function uploadDir(localDir, remoteDir){
             saveYaml(tbtempfile, data);
         }
         
-        if(!yargs.getArgv('no-rapidupload') && data.size > 256 * 1024){
+        const rapidUploadSizeLimit = 20 * 1024 * 1024 * 1024;
+        
+        if(!yargs.getArgv('no-rapidupload') && data.size > rapidUploadSizeLimit){
+            // not documented, but for files bigger than 20GiB you always got error#2
+            console.log(`:: File too big for RapidUpload... [MAX 20GiB]`);
+        }
+        
+        if(!yargs.getArgv('no-rapidupload') && data.size > 256 * 1024 && data.size <= rapidUploadSizeLimit){
             try {
                 console.log(`:: Trying RapidUpload file...`);
                 // do rapid upload...
