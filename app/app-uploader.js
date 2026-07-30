@@ -68,7 +68,12 @@ if(yargs.getArgv('help')){
     }
     
     await showAccountInfo(app);
+    
+    const prev_host = app.params.uhost;
     const upload_host = await app.getUploadHost();
+    if(prev_host != app.params.uhost){
+        console.log('[INFO] Upload host changed:', prev_host, '=>', app.params.uhost);
+    }
     
     await selectDirs();
 })();
