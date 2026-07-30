@@ -262,10 +262,10 @@ async function uploadDir(localDir, remoteDir){
             console.log(`:: Upload chunks...`);
         }
         
-        // const maxTasks = data.size <= 4 * Math.pow(1024, 3) ? 10 : 5;
+        const maxTasks = data.size <= 4 * Math.pow(1024, 3) ? 10 : 5;
         app.TERABOX_TIMEOUT = data.size > 4 * Math.pow(1024, 3) ? 20000 : 10000;
         
-        const upload_status = await uploadChunks(app, data, filePath);
+        const upload_status = await uploadChunks(app, data, filePath, maxTasks);
         delete data.uploaded;
         
         if(upload_status.ok){
