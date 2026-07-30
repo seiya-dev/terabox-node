@@ -265,7 +265,7 @@ async function uploadDir(localDir, remoteDir){
             console.log(`:: Upload file...`);
         }
         else{
-            const uplChunkSizeText = filesize(getChunkSize(parseInt(data.size)), {standard: 'iec', round: 3, pad: true});
+            const uplChunkSizeText = filesize(getChunkSize(parseInt(data.size)), {standard: 'iec'});
             console.log(`:: Set Chunk Size: ${uplChunkSizeText}. Upload chunks...`);
         }
         
