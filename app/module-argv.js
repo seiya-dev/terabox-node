@@ -67,11 +67,7 @@ class Args {
                     };
                     break;
                 case 'clouddl-mode':
-                    yargsOpts[a] = {
-                        describe: 'CloudDL mode select',
-                        choices: ['monitor','add','remove'],
-                        type: 'string',
-                    };
+                    yargsOpts[a] = {};
                     break;
             }
         }

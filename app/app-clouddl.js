@@ -29,6 +29,12 @@ console.log(`[INFO] ${meta.name_ext} v${meta.version} (CloudDL Module)`);
 
 const yargs = new Argv(config, ['a','clouddl-mode']);
 yargs.addArgv({
+    'clouddl-mode': {
+        alias: ['mode', 'm'],
+        describe: 'CloudDL mode select',
+        choices: ['monitor', 'add', 'remove', 'delete'],
+        type: 'string',
+    },
     't': {
         alias: 'torrent',
         describe: 'select torrent by torrent remote path',
@@ -38,6 +44,11 @@ yargs.addArgv({
         alias: ['idx', 'index'],
         describe: 'define torrent indexes coma-separated',
         type: 'string',
+    },
+    qs: {
+        alias: ['quickstatus'],
+        describe: 'skip updating progress bars in monitor mode',
+        type: 'boolean',
     }
 })
 
@@ -142,7 +153,7 @@ async function startApiSequence(){
         await createTask(tfile.p + '/', tfile.t);
     }
     
-    if(mode == 'remove'){
+    if(mode == 'remove' || mode == 'delete'){
         const tsklst = await collectTasks(true);
         console.log();
         
@@ -303,12 +314,19 @@ function fb2str(bytes) {
 }
 
 async function monitor(taskIds) {
-    while (true) {
-        try{
+    try {
+        while (true) {
             const data = await app.clouddl_query_task(1, taskIds);
             updateBars(data);
+            
+            if (yargs.getArgv('qs')) {
+                break;
+            }
+            
+            await delay(REFRESH_INTERVAL);
         }
-        catch(e){}
-        await delay(REFRESH_INTERVAL);
+    }
+    finally {
+        multibar.stop();
     }
 }
