@@ -21,8 +21,8 @@ importers:
         specifier: ^5.0.3
         version: 5.0.3
       filesize:
-        specifier: ^11.0.22
-        version: 11.0.22
+        specifier: ^11.0.24
+        version: 11.0.24
       qrcode-terminal:
         specifier: ^0.12.0
         version: 0.12.0
@@ -233,8 +233,8 @@ packages:
   fast-wrap-ansi@0.2.2:
     resolution: {integrity: sha512-7F2Fl+TjRSenLqlU3UjSH0iyqopqoZIu7eZVpEirP2g1GtWa2G/ecEmBdgz31+Mxr+ELclgg6sokpSFIQiZ02Q==}
 
-  filesize@11.0.22:
-    resolution: {integrity: sha512-RlCVs9CY+oSsRnNZn95J9vDXjNjOwddKyTFjOYtA4yxYVIxBnwiVVGJX+TFhsmu3uUf81JDGyijtYL9xgawlTw==}
+  filesize@11.0.24:
+    resolution: {integrity: sha512-R+YVXTiRPxjX02Ul2Ta2cCas43gjdwKaxTIxl9/7bkaAy97U4BXb31N/xXk7Kp9pIkg3o/RScNypKr6RlcZMyA==}
     engines: {node: '>= 10.8.0'}
 
   get-caller-file@2.0.5:
@@ -460,7 +460,7 @@ snapshots:
     dependencies:
       fast-string-width: 3.0.2
 
-  filesize@11.0.22: {}
+  filesize@11.0.24: {}
 
   get-caller-file@2.0.5: {}
 
@@ -508,7 +508,7 @@ snapshots:
   terabox-api@2.9.5:
     dependencies:
       crc-32: 1.2.2
-      filesize: 11.0.22
+      filesize: 11.0.24
       tough-cookie: 6.0.2
       undici: 8.10.1
 
