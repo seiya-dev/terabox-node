@@ -14,7 +14,21 @@ no options for this script
 -l "/"             select local directory
 -r "/"             select remote directory
 --no-rapidupload   don't use rapidupload function
+--savehash         save .tbhash files after uploading
 ```
+
+### Sync Local Folder to TeraBox:
+**tb-sync <options>**
+```
+-a "acc"           select account (by name from ".config.yaml")
+-l "/"             select local directory
+-r "/"             select remote directory
+--no-rapidupload   don't use rapidupload function
+--savehash         save .tbhash files after uploading
+```
+
+Example: `tb-sync -a "acc" -l "./backup" -r "/backup"`
+
 ### Create TBHash for RapidUpload:
 **tb-mkhash <options>**
 ```

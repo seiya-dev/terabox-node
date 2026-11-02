@@ -13,6 +13,7 @@
         "tb-getdl-share": "app/app-getdl-share.js",
         "tb-mkhash": "app/app-mktbhash.js",
         "tb-upload": "app/app-uploader.js",
+        "tb-sync": "app/app-sync.js",
         "tb-clouddl": "app/app-clouddl.js",
         "tb-share": "app/app-share.js"
     },
