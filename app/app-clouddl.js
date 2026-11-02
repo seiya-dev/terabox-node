@@ -143,6 +143,7 @@ async function startApiSequence(){
             tfile = await select({
                 message: 'Select Torrent File:',
                 choices: selTorrent,
+                pageSize: 20,
             });
         }
         
@@ -225,6 +226,7 @@ async function createTask(upfld, src){
         let selectedIndex = selIdx.length > 0 ? selIdx : await checkbox({
             message: 'Select Files',
             choices: idxList,
+            pageSize: 20,
         });
         
         if(selIdx.length > 0){
