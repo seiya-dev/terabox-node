@@ -30,8 +30,8 @@ importers:
         specifier: ^2.9.5
         version: 2.9.5
       tough-cookie:
-        specifier: ^6.0.2
-        version: 6.0.2
+        specifier: ^6.1.0
+        version: 6.1.0
       undici:
         specifier: ^8.12.3
         version: 8.12.3
@@ -298,8 +298,8 @@ packages:
     resolution: {integrity: sha512-48dH6aSpQnpbzDUc4vIQZ1VjB8tkK+e8c1yx05/SZK+rkssgjEOlxDd/yU8/a4vGYQ9vRgJr9dwMq9TJ0b3X2Q==}
     hasBin: true
 
-  tough-cookie@6.0.2:
-    resolution: {integrity: sha512-exgYmnmL/sJpR3upZfXG5PoatXQii55xAiXGXzY+sROLZ/Y+SLcp9PgJNI9Vz37HpQ74WvDcLT8eqm+kV3FzrA==}
+  tough-cookie@6.1.0:
+    resolution: {integrity: sha512-FTxc8u8Kl2tz0Lat1u8ksvcy8bwHRyEMawwTWybo51JqaC6O7SvfuhAKg+Ld6VqyIe2QRJBzY9HA7y2WyFRT2w==}
     engines: {node: '>=16'}
 
   undici@8.12.3:
@@ -509,7 +509,7 @@ snapshots:
     dependencies:
       crc-32: 1.2.2
       filesize: 11.0.29
-      tough-cookie: 6.0.2
+      tough-cookie: 6.1.0
       undici: 8.12.3
 
   tldts-core@7.4.20: {}
@@ -518,7 +518,7 @@ snapshots:
     dependencies:
       tldts-core: 7.4.20
 
-  tough-cookie@6.0.2:
+  tough-cookie@6.1.0:
     dependencies:
       tldts: 7.4.19
 
